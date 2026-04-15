@@ -11,17 +11,28 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>*{box-sizing:border-box;}body{margin:0;padding:0;}</style>
+  <style>
+    *{box-sizing:border-box;}
+    body{margin:0;padding:0;background:#faf5ff;}
+    /* 아이폰 홈 인디케이터 영역 확보 */
+    :root {
+      --sat: env(safe-area-inset-top);
+      --sab: env(safe-area-inset-bottom);
+    }
+  </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel" data-presets="react">
-const { useState, useEffect } = React;
-const won = n => (Math.abs(n||0)).toLocaleString('ko-KR')+'원';
-const dkey = d => { const dt=d instanceof Date?d:new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; };
-const TODAY = dkey(new Date());
-const TODAY_DATE = new Date().getDate();
-const KR_HOL = new Set(['2025-01-01','2025-01-28','2025-01-29','2025-01-30','2025-03-01','2025-03-03','2025-05-05','2025-05-06','2025-06-06','2025-08-15','2025-10-03','2025-10-05','2025-10-06','2025-10-07','2025-10-08','2025-10-09','2025-12-25','2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-03-01','2026-03-02','2026-05-05','2026-05-24','2026-05-25','2026-06-06','2026-08-15','2026-08-17','2026-09-28','2026-09-29','2026-09-30','2026-10-01','2026-10-03','2026-10-09','2026-12-25','2027-01-01']);
+const {useState,useEffect}=React;
+const won=n=>(Math.abs(n||0)).toLocaleString('ko-KR')+'원';
+// 달력 셀용 compact 금액 (원 단위)
+const cw=n=>{const a=Math.abs(n||0);if(a>=10000000)return`${(a/10000000).toFixed(0)}천만`;if(a>=10000)return`${(a/10000).toFixed(a%10000===0?0:1)}만원`;if(a>=1000)return`${(a/1000).toFixed(0)}천원`;return`${a}원`;};
+const dkey=d=>{const dt=d instanceof Date?d:new Date(d);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;};
+const TODAY=dkey(new Date());
+const TODAY_DATE=new Date().getDate();
+
+const KR_HOL=new Set(['2025-01-01','2025-01-28','2025-01-29','2025-01-30','2025-03-01','2025-03-03','2025-05-05','2025-05-06','2025-06-06','2025-08-15','2025-10-03','2025-10-05','2025-10-06','2025-10-07','2025-10-08','2025-10-09','2025-12-25','2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-03-01','2026-03-02','2026-05-05','2026-05-24','2026-05-25','2026-06-06','2026-08-15','2026-08-17','2026-09-28','2026-09-29','2026-09-30','2026-10-01','2026-10-03','2026-10-09','2026-12-25','2027-01-01']);
 const isHol=d=>KR_HOL.has(dkey(d));
 const isNW=d=>{const w=d.getDay();return w===0||w===6||isHol(d);};
 function getSalDay(y,m){const d=new Date(y,m-1,21);while(isNW(d))d.setDate(d.getDate()-1);return d;}
@@ -29,15 +40,19 @@ function getCycle(y,m){const start=getSalDay(y,m);const nm=m===12?1:m+1,ny=m===1
 function getCurCycle(){const n=new Date(),y=n.getFullYear(),m=n.getMonth()+1,sd=getSalDay(y,m);return n>=sd?getCycle(y,m):getCycle(m===1?y-1:y,m===1?12:m-1);}
 const getFxOvDay=(f,mp,dim,ov)=>{const o=ov[mp]?.[f.id];if(!o)return Math.min(f.day,dim);if(typeof o==='number')return Math.min(o,dim);return Math.min(o.day??f.day,dim);};
 const getFxOvAmt=(f,mp,ov)=>{const o=ov[mp]?.[f.id];if(!o||typeof o==='number')return f.amount;return o.amount??f.amount;};
+
 const THEMES={lavender:{id:'lavender',name:'💜 라벤더',primary:'#8b5cf6',light:'#c4b5fd',bg:'#f5f3ff',card:'#fff',grad:'linear-gradient(135deg,#7c3aed,#a78bfa)',text:'#374151',sub:'#9ca3af',border:'#ede9fe',green:'#059669'},rose:{id:'rose',name:'🌸 로즈',primary:'#e879a0',light:'#fbcfe8',bg:'#fff0f6',card:'#fff',grad:'linear-gradient(135deg,#db2777,#f9a8d4)',text:'#374151',sub:'#9ca3af',border:'#fce7f3',green:'#059669'},peach:{id:'peach',name:'🍑 피치',primary:'#f97316',light:'#fed7aa',bg:'#fff8f0',card:'#fff',grad:'linear-gradient(135deg,#ea580c,#fb923c)',text:'#374151',sub:'#9ca3af',border:'#ffedd5',green:'#059669'},sage:{id:'sage',name:'🌿 세이지',primary:'#16a34a',light:'#86efac',bg:'#f0fdf4',card:'#fff',grad:'linear-gradient(135deg,#15803d,#4ade80)',text:'#374151',sub:'#9ca3af',border:'#dcfce7',green:'#2563eb'},sky:{id:'sky',name:'🩵 스카이',primary:'#0284c7',light:'#7dd3fc',bg:'#f0f9ff',card:'#fff',grad:'linear-gradient(135deg,#0369a1,#38bdf8)',text:'#374151',sub:'#9ca3af',border:'#e0f2fe',green:'#059669'},aqua:{id:'aqua',name:'🌊 아쿠아',primary:'#0d9488',light:'#5eead4',bg:'#f0fdfa',card:'#fff',grad:'linear-gradient(135deg,#0f766e,#2dd4bf)',text:'#374151',sub:'#9ca3af',border:'#ccfbf1',green:'#7c3aed'},blossom:{id:'blossom',name:'🌺 블로썸',primary:'#e11d48',light:'#fda4af',bg:'#fff5f6',card:'#fff',grad:'linear-gradient(135deg,#be123c,#fb7185)',text:'#374151',sub:'#9ca3af',border:'#ffe4e6',green:'#059669'},butter:{id:'butter',name:'🍯 버터',primary:'#ca8a04',light:'#fde68a',bg:'#fffdf0',card:'#fff',grad:'linear-gradient(135deg,#a16207,#fbbf24)',text:'#374151',sub:'#9ca3af',border:'#fef9c3',green:'#059669'},lilac:{id:'lilac',name:'🪻 라일락',primary:'#9333ea',light:'#d8b4fe',bg:'#faf5ff',card:'#fff',grad:'linear-gradient(135deg,#7e22ce,#c084fc)',text:'#374151',sub:'#9ca3af',border:'#f3e8ff',green:'#059669'},dark:{id:'dark',name:'🌙 다크',primary:'#818cf8',light:'#c7d2fe',bg:'#0f172a',card:'#1e293b',grad:'linear-gradient(135deg,#1e1b4b,#4338ca)',text:'#f1f5f9',sub:'#64748b',border:'#334155',green:'#34d399'}};
+
+// 카테고리 초기값 (아이콘+이름 세트)
+const CATS_INIT=[{id:1,name:'식비',icon:'🍚'},{id:2,name:'카페',icon:'☕'},{id:3,name:'쇼핑',icon:'🛍️'},{id:4,name:'교통',icon:'🚇'},{id:5,name:'구독',icon:'📱'},{id:6,name:'생활비',icon:'🏠'},{id:7,name:'문화',icon:'🎬'},{id:8,name:'의료',icon:'💊'},{id:9,name:'파킹통장',icon:'💳'},{id:10,name:'기타',icon:'📦'}];
+const INC_CATS_INIT=[{id:101,name:'월급',icon:'💰'},{id:102,name:'이체',icon:'💸'},{id:103,name:'용돈',icon:'💵'},{id:104,name:'파킹통장',icon:'💳'},{id:105,name:'기타',icon:'📦'}];
+
 const FX0=[{id:1,name:"유튜브",amount:14900,day:16,cat:"구독"},{id:2,name:"티빙",amount:5500,day:24,cat:"구독"},{id:3,name:"넷플릭스",amount:7000,day:12,cat:"구독"},{id:4,name:"월세",amount:170000,day:25,cat:"주거"},{id:5,name:"태우 여행통장",amount:100000,day:25,cat:"저축"},{id:6,name:"보험료",amount:174702,day:6,cat:"보험"},{id:7,name:"통신비",amount:13020,day:23,cat:"통신"},{id:8,name:"인터넷비",amount:23100,day:15,cat:"통신"},{id:9,name:"쿠팡",amount:7890,day:4,cat:"구독"},{id:10,name:"교통비",amount:75000,day:10,cat:"교통"},{id:11,name:"관리비",amount:200000,day:25,cat:"주거"}];
 const IV0={pension:{name:"개인연금",monthly:500000,current:7744856},youth:{name:"청년도약계좌",monthly:700000,current:7000000},funds:{name:"펀드",monthly:350000,current:5711062},stocks:{name:"주식",monthly:1000000,current:18283826},parking:{name:"파킹통장",monthly:0,current:1667322}};
-const CATS=["식비","카페","쇼핑","교통","구독","생활비","문화","의료","파킹통장","기타"];
-const INC_CATS=["월급","이체","용돈","파킹통장","기타"];
-const CE={식비:"🍚",카페:"☕",쇼핑:"🛍️",교통:"🚇",구독:"📱",생활비:"🏠",문화:"🎬",의료:"💊",파킹통장:"💳",기타:"📦",월급:"💰",이체:"💸",용돈:"💵"};
 const CAT_COLORS=["#a78bfa","#f9a8d4","#86efac","#7dd3fc","#fde68a","#fca5a5","#6ee7b7","#fbbf24","#c4b5fd","#94a3b8"];
 function C(th,x={}){return{background:th.card,borderRadius:16,padding:'14px',boxShadow:'0 2px 10px rgba(0,0,0,0.06)',marginBottom:10,...x};}
 const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+const ld=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}};
 
 function App(){
   const[tab,setTab]=useState(0);
@@ -49,16 +64,21 @@ function App(){
   const[theme,setTheme]=useState('lavender');
   const[initAdj,setInitAdj]=useState(0);
   const[fxOv,setFxOv]=useState({});
+  const[cats,setCats]=useState(CATS_INIT);
+  const[incCats,setIncCats]=useState(INC_CATS_INIT);
   const[rdy,setRdy]=useState(false);
   const[modal,setModal]=useState(null);
   const[noti,setNoti]=useState(null);
-  const[aiText,setAiText]=useState("");
+  const[aiText,setAiText]=useState('');
   const[aiLoad,setAiLoad]=useState(false);
+
   useEffect(()=>{
-    for(const[k,fn] of[['hj9-sal',setSal],['hj9-fx',setFx],['hj9-iv',setIv],['hj9-tx',setTxns],['hj9-wg',setWg],['hj9-theme',setTheme],['hj9-adj',setInitAdj],['hj9-fxov',setFxOv]]){try{const v=localStorage.getItem(k);if(v)fn(JSON.parse(v));}catch(e){}}
-    if([10,20,30].includes(TODAY_DATE)){try{const ln=localStorage.getItem('hj9-lastnoti');if(!ln||ln!==TODAY){setNoti('📊 오늘은 투자 내역 업데이트 날이에요! 자산 탭에서 잔고를 업데이트해 주세요 💜');localStorage.setItem('hj9-lastnoti',TODAY);}}catch(e){}}
+    const pairs=[['hj9-sal',setSal],['hj9-fx',setFx],['hj9-iv',setIv],['hj9-tx',setTxns],['hj9-wg',setWg],['hj9-theme',setTheme],['hj9-adj',setInitAdj],['hj9-fxov',setFxOv],['hj9-cats',setCats],['hj9-incCats',setIncCats]];
+    pairs.forEach(([k,fn])=>{const v=ld(k);if(v)fn(v);});
+    if([10,20,30].includes(TODAY_DATE)){const ln=ld('hj9-lastnoti');if(!ln||ln!==TODAY){setNoti('📊 오늘은 투자 내역 업데이트 날이에요! 자산 탭에서 잔고를 업데이트해 주세요 💜');sv('hj9-lastnoti',TODAY);}}
     setRdy(true);
   },[]);
+
   const uSal=v=>{setSal(v);sv('hj9-sal',v);};
   const uFx=v=>{setFx(v);sv('hj9-fx',v);};
   const uIv=v=>{setIv(v);sv('hj9-iv',v);};
@@ -66,9 +86,16 @@ function App(){
   const uAdj=v=>{setInitAdj(v);sv('hj9-adj',v);};
   const uTheme=v=>{setTheme(v);sv('hj9-theme',v);};
   const uFxOv2=v=>{setFxOv(v);sv('hj9-fxov',v);};
+  const uCats=v=>{setCats(v);sv('hj9-cats',v);};
+  const uIncCats=v=>{setIncCats(v);sv('hj9-incCats',v);};
+
+  // 카테고리 이름으로 아이콘 찾기
+  const getIcon=name=>[...cats,...incCats].find(c=>c.name===name)?.icon||'📦';
+
   const addTx=t=>{const n=[...txns,t];setTxns(n);sv('hj9-tx',n);if(t.cat==='파킹통장'){const d=t.tp==='exp'?-t.amt:t.amt;uIv({...iv,parking:{...iv.parking,current:iv.parking.current+d}});}};
   const delTx=id=>{const t=txns.find(x=>x.id===id);const n=txns.filter(x=>x.id!==id);setTxns(n);sv('hj9-tx',n);if(t?.cat==='파킹통장'){const d=t.tp==='exp'?t.amt:-t.amt;uIv({...iv,parking:{...iv.parking,current:iv.parking.current+d}});}};
   const updateTx=t=>{const old=txns.find(x=>x.id===t.id);let ni=iv;if(old?.cat==='파킹통장'){const r=old.tp==='exp'?old.amt:-old.amt;ni={...iv,parking:{...iv.parking,current:iv.parking.current+r}};}if(t.cat==='파킹통장'){const d=t.tp==='exp'?-t.amt:t.amt;ni={...ni,parking:{...ni.parking,current:ni.parking.current+d}};}const n=txns.map(x=>x.id===t.id?t:x);setTxns(n);sv('hj9-tx',n);if(ni!==iv)uIv(ni);};
+
   const th=THEMES[theme]||THEMES.lavender;
   const pr=getCurCycle();
   const fxSum=fx.reduce((s,f)=>s+f.amount,0);
@@ -86,11 +113,17 @@ function App(){
   const mLeft=Math.max(1,(wg.year-now.getFullYear())*12+(11-now.getMonth()));
   const needMo=Math.max(0,Math.ceil((wg.target-wFund)/mLeft));
   const saveGap=needMo-ivDed;
+
   if(!rdy)return(<div style={{display:'flex',height:'100vh',alignItems:'center',justifyContent:'center',background:'#faf5ff',flexDirection:'column',gap:12}}><div style={{fontSize:60}}>🌸</div><div style={{color:'#7c3aed',fontSize:15,fontWeight:700}}>가계부 불러오는 중...</div></div>);
-  const ctx={sal,fx,iv,txns,pr,pTx,fxSum,ivDed,baseA,avail,spnt,incd,spPct,wFund,tAss,wg,dLeft,dayB,needMo,saveGap,mLeft,uSal,uFx,uIv,uWg,uAdj,addTx,delTx,updateTx,initAdj,fxOv,uFxOv:uFxOv2,modal,setModal,aiText,setAiText,aiLoad,setAiLoad,th,theme,uTheme};
+
+  const ctx={sal,fx,iv,txns,pr,pTx,fxSum,ivDed,baseA,avail,spnt,incd,spPct,wFund,tAss,wg,dLeft,dayB,needMo,saveGap,mLeft,uSal,uFx,uIv,uWg,uAdj,addTx,delTx,updateTx,initAdj,fxOv,uFxOv:uFxOv2,cats,incCats,uCats,uIncCats,getIcon,modal,setModal,aiText,setAiText,aiLoad,setAiLoad,th,theme,uTheme};
+
+  const TABS=[['🏠','홈'],['📅','가계부'],['📌','고정'],['📈','자산'],['🤖','AI'],['⚙️','관리']];
+
   return(
-    <div style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',background:th.bg,minHeight:'100vh',maxWidth:480,margin:'0 auto',paddingBottom:76,transition:'background .3s'}}>
-      <div style={{background:th.grad,padding:'18px 16px 14px',color:'#fff'}}>
+    <div style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',background:th.bg,minHeight:'100vh',maxWidth:480,margin:'0 auto',paddingBottom:`calc(70px + var(--sab))`,transition:'background .3s'}}>
+      {/* 헤더 - 아이폰 상단 베젤(노치/다이나믹 아일랜드) 대응 */}
+      <div style={{background:th.grad,paddingTop:`calc(14px + var(--sat))`,paddingBottom:14,paddingLeft:16,paddingRight:16,color:'#fff'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
           <div><div style={{fontSize:15,fontWeight:800}}>💜 혜진이의 가계부</div><div style={{fontSize:11,opacity:.75,marginTop:2}}>{pr.label} · {pr.range}</div></div>
           <div style={{display:'flex',gap:6}}>
@@ -106,11 +139,14 @@ function App(){
         {tab===2&&<FixedTab {...ctx}/>}
         {tab===3&&<AssetsTab {...ctx}/>}
         {tab===4&&<AITab {...ctx}/>}
+        {tab===5&&<AdminTab {...ctx}/>}
       </div>
-      <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:480,background:th.card,borderTop:`1px solid ${th.border}`,display:'flex',padding:'6px 0 10px',zIndex:100}}>
-        {[['🏠','홈'],['📅','가계부'],['📌','고정'],['📈','자산'],['🤖','AI']].map(([ic,lb],i)=>(
-          <button key={i} onClick={()=>setTab(i)} style={{flex:1,border:'none',background:'none',cursor:'pointer',padding:'4px 0',color:tab===i?th.primary:th.sub}}>
-            <div style={{fontSize:20}}>{ic}</div><div style={{fontSize:9,fontWeight:tab===i?700:500,marginTop:2}}>{lb}</div>
+      {/* 하단 탭바 - 아이폰 홈 인디케이터 대응 */}
+      <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:480,background:th.card,borderTop:`1px solid ${th.border}`,display:'flex',paddingTop:6,paddingBottom:`calc(8px + var(--sab))`,zIndex:100}}>
+        {TABS.map(([ic,lb],i)=>(
+          <button key={i} onClick={()=>setTab(i)} style={{flex:1,border:'none',background:'none',cursor:'pointer',padding:'2px 0',color:tab===i?th.primary:th.sub}}>
+            <div style={{fontSize:18}}>{ic}</div>
+            <div style={{fontSize:8,fontWeight:tab===i?700:500,marginTop:2}}>{lb}</div>
           </button>
         ))}
       </div>
@@ -119,7 +155,8 @@ function App(){
   );
 }
 
-function HomeTab({sal,fxSum,ivDed,baseA,avail,spnt,incd,spPct,wFund,tAss,wg,dLeft,dayB,needMo,saveGap,mLeft,pTx,iv,setModal,th}){
+// ── 홈 탭 ─────────────────────────────────────────────────────────
+function HomeTab({sal,fxSum,ivDed,baseA,avail,spnt,incd,spPct,wFund,tAss,wg,dLeft,dayB,needMo,saveGap,mLeft,pTx,iv,setModal,getIcon,th}){
   const wPct=Math.min(100,(wFund/wg.target)*100);
   const todayTx=pTx.filter(t=>t.date===TODAY);
   const todaySpnt=todayTx.filter(t=>t.tp==='exp').reduce((s,t)=>s+t.amt,0);
@@ -134,20 +171,8 @@ function HomeTab({sal,fxSum,ivDed,baseA,avail,spnt,incd,spPct,wFund,tAss,wg,dLef
       <div style={{display:'flex',justifyContent:'space-between',fontSize:10,opacity:.75,marginTop:4}}><span>사용률 {spPct.toFixed(0)}%</span><span>잔여 {dLeft}일 · 일 {won(dayB)}</span></div>
     </div>
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-      <div style={C(th,{marginBottom:0})}>
-        <div style={{fontSize:11,color:th.sub,fontWeight:600}}>💍 결혼 자금</div>
-        <div style={{fontSize:18,fontWeight:800,color:th.primary,marginTop:5}}>{won(wFund)}</div>
-        <div style={{background:th.border,borderRadius:999,height:5,margin:'8px 0 4px',overflow:'hidden'}}><div style={{background:th.grad,height:'100%',width:`${wPct}%`,borderRadius:999}}/></div>
-        <div style={{fontSize:9,color:th.primary,fontWeight:600}}>{wPct.toFixed(1)}% 달성</div>
-        <div style={{fontSize:9,color:th.sub,marginTop:1}}>목표 {wg.year}년 · {won(wg.target)}</div>
-      </div>
-      <div style={C(th,{marginBottom:0})}>
-        <div style={{fontSize:11,color:th.sub,fontWeight:600}}>🏦 총 자산</div>
-        <div style={{fontSize:18,fontWeight:800,color:th.green,marginTop:5}}>{won(tAss)}</div>
-        <div style={{marginTop:8,display:'flex',flexDirection:'column',gap:3}}>
-          {[['📈 투자',wFund],['💳 파킹',iv.parking.current],['🔒 연금',iv.pension.current]].map(([lb,v])=>(<div key={lb} style={{display:'flex',justifyContent:'space-between',fontSize:9}}><span style={{color:th.sub}}>{lb}</span><span style={{fontWeight:700,color:th.text}}>{won(v)}</span></div>))}
-        </div>
-      </div>
+      <div style={C(th,{marginBottom:0})}><div style={{fontSize:11,color:th.sub,fontWeight:600}}>💍 결혼 자금</div><div style={{fontSize:18,fontWeight:800,color:th.primary,marginTop:5}}>{won(wFund)}</div><div style={{background:th.border,borderRadius:999,height:5,margin:'8px 0 4px',overflow:'hidden'}}><div style={{background:th.grad,height:'100%',width:`${wPct}%`,borderRadius:999}}/></div><div style={{fontSize:9,color:th.primary,fontWeight:600}}>{wPct.toFixed(1)}% 달성</div><div style={{fontSize:9,color:th.sub,marginTop:1}}>목표 {wg.year}년 · {won(wg.target)}</div></div>
+      <div style={C(th,{marginBottom:0})}><div style={{fontSize:11,color:th.sub,fontWeight:600}}>🏦 총 자산</div><div style={{fontSize:18,fontWeight:800,color:th.green,marginTop:5}}>{won(tAss)}</div><div style={{marginTop:8,display:'flex',flexDirection:'column',gap:3}}>{[['📈 투자',wFund],['💳 파킹',iv.parking.current],['🔒 연금',iv.pension.current]].map(([lb,v])=>(<div key={lb} style={{display:'flex',justifyContent:'space-between',fontSize:9}}><span style={{color:th.sub}}>{lb}</span><span style={{fontWeight:700,color:th.text}}>{won(v)}</span></div>))}</div></div>
     </div>
     <div style={{...C(th),background:`${th.primary}11`,border:`1.5px solid ${th.border}`}}>
       <div style={{fontSize:12,fontWeight:700,color:th.text,marginBottom:10}}>💡 결혼 자금 달성 플랜</div>
@@ -164,7 +189,7 @@ function HomeTab({sal,fxSum,ivDed,baseA,avail,spnt,incd,spPct,wFund,tAss,wg,dLef
       <div style={{fontSize:12,fontWeight:700,color:th.text,marginBottom:10}}>📊 이번 달 TOP 지출</div>
       {topCats.length===0?(<div style={{color:th.sub,fontSize:12,textAlign:'center',padding:'16px 0'}}>아직 지출 내역이 없어요 🌱</div>):topCats.map(([cat,amt])=>(
         <div key={cat} style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
-          <div style={{width:36,height:36,borderRadius:12,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{CE[cat]||'📦'}</div>
+          <div style={{width:36,height:36,borderRadius:12,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{getIcon(cat)}</div>
           <div style={{flex:1}}><div style={{display:'flex',justifyContent:'space-between',fontSize:12}}><span style={{fontWeight:600,color:th.text}}>{cat}</span><span style={{fontWeight:700,color:th.primary}}>{won(amt)}</span></div><div style={{background:th.border,borderRadius:999,height:4,marginTop:3,overflow:'hidden'}}><div style={{background:th.light,height:'100%',width:`${spnt>0?((amt/spnt)*100).toFixed(0):0}%`,borderRadius:999}}/></div></div>
         </div>
       ))}
@@ -177,14 +202,25 @@ function HomeTab({sal,fxSum,ivDed,baseA,avail,spnt,incd,spPct,wFund,tAss,wg,dLef
           <button onClick={()=>setModal({type:'txn',data:{date:TODAY}})} style={{background:th.primary,color:'#fff',border:'none',borderRadius:20,padding:'4px 12px',fontSize:11,cursor:'pointer',fontWeight:700}}>+ 추가</button>
         </div>
       </div>
-      {todayTx.length===0?(<div style={{color:th.sub,fontSize:12,textAlign:'center',padding:'12px 0'}}>오늘 지출이 없어요 ✨</div>):todayTx.map(t=><TxRow key={t.id} t={t} onEdit={t=>setModal({type:'txn',editTx:t})} th={th}/>)}
+      {todayTx.length===0?(<div style={{color:th.sub,fontSize:12,textAlign:'center',padding:'12px 0'}}>오늘 지출이 없어요 ✨</div>):todayTx.map(t=><TxRow key={t.id} t={t} onEdit={t=>setModal({type:'txn',editTx:t})} getIcon={getIcon} th={th}/>)}
     </div>
   </div>);
 }
 
-function TxRow({t,onDel,onEdit,th}){return(<div style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{CE[t.cat]||'📦'}</div><div style={{flex:1,minWidth:0,cursor:onEdit?'pointer':'default'}} onClick={()=>onEdit&&onEdit(t)}><div style={{fontSize:12,fontWeight:600,color:th.text,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.memo||t.cat}</div><div style={{fontSize:10,color:th.sub}}>{t.cat} · {t.date}</div></div><div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}><span style={{fontSize:13,fontWeight:700,color:t.tp==='exp'?'#dc2626':th.green}}>{t.tp==='exp'?'-':'+'}{won(t.amt)}</span>{onEdit&&<button onClick={()=>onEdit(t)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:th.sub,padding:'0 2px'}}>✏️</button>}{onDel&&<button onClick={()=>onDel(t.id)} style={{background:'none',border:'none',cursor:'pointer',fontSize:16,color:th.sub,padding:'0 2px'}}>×</button>}</div></div>);}
+function TxRow({t,onDel,onEdit,getIcon,th}){
+  return(<div style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}>
+    <div style={{width:36,height:36,borderRadius:12,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{getIcon(t.cat)}</div>
+    <div style={{flex:1,minWidth:0,cursor:onEdit?'pointer':'default'}} onClick={()=>onEdit&&onEdit(t)}><div style={{fontSize:12,fontWeight:600,color:th.text,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.memo||t.cat}</div><div style={{fontSize:10,color:th.sub}}>{t.cat} · {t.date}</div></div>
+    <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
+      <span style={{fontSize:13,fontWeight:700,color:t.tp==='exp'?'#dc2626':th.green}}>{t.tp==='exp'?'-':'+'}{won(t.amt)}</span>
+      {onEdit&&<button onClick={()=>onEdit(t)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:th.sub,padding:'0 2px'}}>✏️</button>}
+      {onDel&&<button onClick={()=>onDel(t.id)} style={{background:'none',border:'none',cursor:'pointer',fontSize:16,color:th.sub,padding:'0 2px'}}>×</button>}
+    </div>
+  </div>);
+}
 
-function LedgerTab({txns,delTx,updateTx,setModal,th,fx,fxOv,sal}){
+// ── 가계부 탭 ─────────────────────────────────────────────────────
+function LedgerTab({txns,delTx,updateTx,setModal,th,fx,fxOv,sal,cats,incCats,getIcon}){
   const initVC=()=>{const c=getCurCycle();return{y:c.y,m:c.m};};
   const[vc,setVc]=useState(initVC);
   const[sel,setSel]=useState(TODAY);
@@ -193,8 +229,7 @@ function LedgerTab({txns,delTx,updateTx,setModal,th,fx,fxOv,sal}){
   const prevC=()=>setVc(({y,m})=>({y:m===1?y-1:y,m:m===1?12:m-1}));
   const nextC=()=>setVc(({y,m})=>({y:m===12?y+1:y,m:m===12?1:m+1}));
   const cells=[];
-  const startDow=cycle.start.getDay();
-  for(let i=0;i<startDow;i++)cells.push(null);
+  for(let i=0;i<cycle.start.getDay();i++)cells.push(null);
   let cd=new Date(cycle.start);
   while(cd<=cycle.end){cells.push(new Date(cd));cd=new Date(cd);cd.setDate(cd.getDate()+1);}
   const dm={};
@@ -237,18 +272,19 @@ function LedgerTab({txns,delTx,updateTx,setModal,th,fx,fxOv,sal}){
           const dk=dkey(cellD),isSel=sel===dk,isT=dk===TODAY;
           const isH=isHol(cellD)||cellD.getDay()===0,isSat=cellD.getDay()===6;
           const is2=cellD.getMonth()!==cycle.start.getMonth(),dd=dm[dk];
-          let tc=isSel?'#fff':isT?th.primary:isH?'#ef4444':isSat?'#3b82f6':th.text;
-          return(<div key={dk} onClick={()=>setSel(dk)} style={{cursor:'pointer',borderRadius:10,padding:'4px 2px',background:isSel?th.primary:is2?`${th.border}cc`:'transparent',textAlign:'center',minHeight:50}}>
+          const tc=isSel?'#fff':isT?th.primary:isH?'#ef4444':isSat?'#3b82f6':th.text;
+          return(<div key={dk} onClick={()=>setSel(dk)} style={{cursor:'pointer',borderRadius:10,padding:'3px 1px',background:isSel?th.primary:is2?`${th.border}cc`:'transparent',textAlign:'center',minHeight:52}}>
             <div style={{fontSize:11,fontWeight:isT?800:500,color:tc}}>{cellD.getDate()}</div>
-            {is2&&!isSel&&<div style={{fontSize:7,color:th.sub,opacity:.6,marginTop:-1}}>{cellD.getMonth()+1}월</div>}
-            {dd?.e>0&&<div style={{fontSize:8,color:isSel?'rgba(255,255,255,.9)':'#dc2626',marginTop:1}}>-{(dd.e/1000).toFixed(1)}k</div>}
-            {dd?.i>0&&<div style={{fontSize:8,color:isSel?'rgba(255,255,255,.9)':th.green}}>+{(dd.i/1000).toFixed(1)}k</div>}
+            {is2&&!isSel&&<div style={{fontSize:7,color:th.sub,opacity:.6}}>{cellD.getMonth()+1}월</div>}
+            {/* ★ k 대신 원 단위로 표시 */}
+            {dd?.e>0&&<div style={{fontSize:7,color:isSel?'rgba(255,255,255,.9)':'#dc2626',marginTop:1,lineHeight:1.2}}>-{cw(dd.e)}</div>}
+            {dd?.i>0&&<div style={{fontSize:7,color:isSel?'rgba(255,255,255,.9)':th.green,lineHeight:1.2}}>+{cw(dd.i)}</div>}
           </div>);
         })}
       </div>
       <div style={{borderTop:`1px solid ${th.border}`,marginTop:10,paddingTop:10,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:4}}>
-        <div style={{textAlign:'center'}}><div style={{fontSize:9,color:th.sub}}>총 지출</div><div style={{fontSize:11,fontWeight:800,color:'#dc2626',marginTop:2}}>-{won(cyTotalExp)}</div><div style={{fontSize:8,color:th.sub,marginTop:1}}>고정 포함</div></div>
-        <div style={{textAlign:'center'}}><div style={{fontSize:9,color:th.sub}}>총 수입</div><div style={{fontSize:11,fontWeight:800,color:th.green,marginTop:2}}>+{won(cyTotalInc)}</div><div style={{fontSize:8,color:th.sub,marginTop:1}}>월급 포함</div></div>
+        <div style={{textAlign:'center'}}><div style={{fontSize:9,color:th.sub}}>총 지출</div><div style={{fontSize:11,fontWeight:800,color:'#dc2626',marginTop:2}}>-{won(cyTotalExp)}</div><div style={{fontSize:8,color:th.sub}}>고정 포함</div></div>
+        <div style={{textAlign:'center'}}><div style={{fontSize:9,color:th.sub}}>총 수입</div><div style={{fontSize:11,fontWeight:800,color:th.green,marginTop:2}}>+{won(cyTotalInc)}</div><div style={{fontSize:8,color:th.sub}}>월급 포함</div></div>
         <div style={{textAlign:'center'}}><div style={{fontSize:9,color:th.sub}}>순 소비</div><div style={{fontSize:11,fontWeight:800,color:cyTotalExp-cyTotalInc>0?'#dc2626':th.green,marginTop:2}}>{won(cyTotalExp-cyTotalInc)}</div></div>
       </div>
     </div>
@@ -259,28 +295,30 @@ function LedgerTab({txns,delTx,updateTx,setModal,th,fx,fxOv,sal}){
       </div>
       <div style={{display:'flex',gap:6,marginBottom:10}}>{[['all','전체'],['exp','💸 지출'],['inc','💰 수입']].map(([v,lb])=>(<button key={v} onClick={()=>setFilter(v)} style={{border:'none',borderRadius:20,padding:'4px 12px',fontSize:10,cursor:'pointer',fontWeight:600,background:filter===v?th.primary:th.border,color:filter===v?'#fff':th.sub}}>{lb}</button>))}</div>
       {showSal&&isSalDay&&(<div style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:`${th.green}22`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>💰</div><div style={{flex:1}}><div style={{display:'flex',alignItems:'center',gap:5}}><span style={{fontSize:12,fontWeight:600,color:th.text}}>월급</span><span style={{fontSize:9,color:th.green,background:`${th.green}22`,borderRadius:6,padding:'1px 5px',fontWeight:600}}>자동</span></div><div style={{fontSize:10,color:th.sub}}>{cycle.label} 급여일</div></div><span style={{fontSize:13,fontWeight:700,color:th.green}}>+{won(sal)}</span></div>)}
-      {showFx&&selFx.map(f=>{const effDay=getFxOvDay(f,selMp,selDim,fxOv),effAmt=getFxOvAmt(f,selMp,fxOv),isOv=!!(fxOv[selMp]?.[f.id]);return(<div key={f.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>📌</div><div style={{flex:1}}><div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}><span style={{fontSize:12,fontWeight:600,color:th.text}}>{f.name}</span><span style={{fontSize:9,color:th.primary,background:th.border,borderRadius:6,padding:'1px 5px',fontWeight:600}}>고정</span>{isOv&&<span style={{fontSize:9,color:'#ea580c',background:'#fff7ed',borderRadius:6,padding:'1px 5px',fontWeight:600}}>수정됨</span>}</div><div style={{fontSize:10,color:th.sub}}>기본 {f.day}일</div></div><div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}><span style={{fontSize:13,fontWeight:700,color:'#dc2626'}}>-{won(effAmt)}</span><button onClick={()=>setModal({type:'fxmonth',fxId:f.id,fxName:f.name,fxDefaultDay:f.day,fxDefaultAmt:f.amount,monthKey:selMp})} style={{border:'none',background:th.border,borderRadius:8,padding:'3px 7px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button></div></div>);})}
-      {filteredTx.map(t=><TxRow key={t.id} t={t} onDel={delTx} onEdit={t=>setModal({type:'txn',editTx:t})} th={th}/>)}
+      {showFx&&selFx.map(f=>{const effAmt=getFxOvAmt(f,selMp,fxOv),isOv=!!(fxOv[selMp]?.[f.id]);return(<div key={f.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>📌</div><div style={{flex:1}}><div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}><span style={{fontSize:12,fontWeight:600,color:th.text}}>{f.name}</span><span style={{fontSize:9,color:th.primary,background:th.border,borderRadius:6,padding:'1px 5px',fontWeight:600}}>고정</span>{isOv&&<span style={{fontSize:9,color:'#ea580c',background:'#fff7ed',borderRadius:6,padding:'1px 5px',fontWeight:600}}>수정됨</span>}</div><div style={{fontSize:10,color:th.sub}}>기본 {f.day}일</div></div><div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}><span style={{fontSize:13,fontWeight:700,color:'#dc2626'}}>-{won(effAmt)}</span><button onClick={()=>setModal({type:'fxmonth',fxId:f.id,fxName:f.name,fxDefaultDay:f.day,fxDefaultAmt:f.amount,monthKey:selMp})} style={{border:'none',background:th.border,borderRadius:8,padding:'3px 7px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button></div></div>);})}
+      {filteredTx.map(t=><TxRow key={t.id} t={t} onDel={delTx} onEdit={t=>setModal({type:'txn',editTx:t})} getIcon={getIcon} th={th}/>)}
       {!hasAny&&<div style={{color:th.sub,fontSize:12,textAlign:'center',padding:'20px 0'}}>내역 없음 · 추가해 보세요 🌟</div>}
       {hasAny&&(<div style={{borderTop:`1px solid ${th.border}`,paddingTop:8,marginTop:4,display:'flex',justifyContent:'space-between',fontSize:11,fontWeight:700}}><span style={{color:'#dc2626'}}>지출 -{won(selTxExp+selFxTotal)}</span><span style={{color:th.green}}>수입 +{won(selTxInc+(isSalDay?sal:0))}</span></div>)}
     </div>
     <div style={C(th)}>
       <div style={{fontSize:12,fontWeight:700,color:th.text,marginBottom:12}}>📊 {cycle.label} 소비 통계</div>
-      {Object.keys(allCyByCat).length===0?(<div style={{color:th.sub,fontSize:12,textAlign:'center',padding:'16px 0'}}>이번 달 지출 내역이 없어요 🌱</div>):Object.entries(allCyByCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt],i)=>{const pct=(amt/cyTotalExp*100).toFixed(1);return(<div key={cat} style={{marginBottom:10}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}><div style={{display:'flex',alignItems:'center',gap:6}}><span style={{fontSize:16}}>{CE[cat]||'📦'}</span><span style={{fontSize:12,fontWeight:600,color:th.text}}>{cat}</span></div><div><span style={{fontSize:12,fontWeight:700,color:th.primary}}>{won(amt)}</span><span style={{fontSize:10,color:th.sub,marginLeft:6}}>{pct}%</span></div></div><div style={{background:th.border,borderRadius:999,height:8,overflow:'hidden'}}><div style={{background:CAT_COLORS[i%CAT_COLORS.length],height:'100%',width:`${pct}%`,borderRadius:999}}/></div></div>);})}
+      {Object.keys(allCyByCat).length===0?(<div style={{color:th.sub,fontSize:12,textAlign:'center',padding:'16px 0'}}>이번 달 지출 내역이 없어요 🌱</div>):Object.entries(allCyByCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt],i)=>{const pct=(amt/cyTotalExp*100).toFixed(1);return(<div key={cat} style={{marginBottom:10}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}><div style={{display:'flex',alignItems:'center',gap:6}}><span style={{fontSize:16}}>{getIcon(cat)}</span><span style={{fontSize:12,fontWeight:600,color:th.text}}>{cat}</span></div><div><span style={{fontSize:12,fontWeight:700,color:th.primary}}>{won(amt)}</span><span style={{fontSize:10,color:th.sub,marginLeft:6}}>{pct}%</span></div></div><div style={{background:th.border,borderRadius:999,height:8,overflow:'hidden'}}><div style={{background:CAT_COLORS[i%CAT_COLORS.length],height:'100%',width:`${pct}%`,borderRadius:999}}/></div></div>);})}
       {cyTotalExp>0&&(<div style={{borderTop:`1px solid ${th.border}`,paddingTop:8,marginTop:4,display:'flex',justifyContent:'space-between',fontSize:11,fontWeight:700}}><span style={{color:th.text}}>합계</span><span style={{color:'#dc2626'}}>{won(cyTotalExp)}</span></div>)}
     </div>
   </div>);
 }
 
+// ── 고정지출 탭 ────────────────────────────────────────────────────
 function FixedTab({fx,fxSum,uFx,setModal,th}){
   const byCat={};fx.forEach(f=>{byCat[f.cat]=byCat[f.cat]||[];byCat[f.cat].push(f);});
   return(<div>
     <div style={{background:th.grad,borderRadius:16,padding:'16px',color:'#fff',marginBottom:10}}><div style={{fontSize:11,opacity:.85}}>📌 매월 고정 지출 합계</div><div style={{fontSize:28,fontWeight:800,marginTop:4}}>{won(fxSum)}</div><div style={{fontSize:10,opacity:.7,marginTop:2}}>{fx.length}개 항목</div></div>
     <button onClick={()=>setModal({type:'fx',data:null})} style={{width:'100%',background:th.border,border:`2px dashed ${th.light}`,borderRadius:14,padding:'12px',fontSize:12,color:th.primary,cursor:'pointer',fontWeight:700,marginBottom:10}}>+ 새 고정 지출 추가</button>
-    {Object.entries(byCat).map(([cat,items])=>(<div key={cat} style={C(th)}><div style={{fontSize:11,fontWeight:700,color:th.sub,marginBottom:8}}>{CE[cat]||'📌'} {cat} · {won(items.reduce((s,f)=>s+f.amount,0))}</div>{items.map(f=>(<div key={f.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:th.text}}>{f.name}</div><div style={{fontSize:10,color:th.sub}}>매월 {f.day}일 · {won(f.amount)}</div></div><div style={{display:'flex',gap:4}}><button onClick={()=>setModal({type:'fx',data:f})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button><button onClick={()=>uFx(fx.filter(x=>x.id!==f.id))} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button></div></div>))}</div>))}
+    {Object.entries(byCat).map(([cat,items])=>(<div key={cat} style={C(th)}><div style={{fontSize:11,fontWeight:700,color:th.sub,marginBottom:8}}>📌 {cat} · {won(items.reduce((s,f)=>s+f.amount,0))}</div>{items.map(f=>(<div key={f.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:th.text}}>{f.name}</div><div style={{fontSize:10,color:th.sub}}>매월 {f.day}일 · {won(f.amount)}</div></div><div style={{display:'flex',gap:4}}><button onClick={()=>setModal({type:'fx',data:f})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button><button onClick={()=>uFx(fx.filter(x=>x.id!==f.id))} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button></div></div>))}</div>))}
   </div>);
 }
 
+// ── 자산 탭 ────────────────────────────────────────────────────────
 function AssetsTab({iv,wFund,tAss,uIv,setModal,wg,uWg,needMo,mLeft,th}){
   const wPct=Math.min(100,(wFund/wg.target)*100);
   return(<div>
@@ -290,17 +328,13 @@ function AssetsTab({iv,wFund,tAss,uIv,setModal,wg,uWg,needMo,mLeft,th}){
   </div>);
 }
 
+// ── AI 탭 ──────────────────────────────────────────────────────────
 function AITab({pTx,spnt,avail,sal,wFund,wg,fxSum,aiText,setAiText,aiLoad,setAiLoad,th}){
   const analyze=async()=>{
-    setAiLoad(true);setAiText("");
+    setAiLoad(true);setAiText('');
     const byCat={};pTx.filter(t=>t.tp==='exp').forEach(t=>{byCat[t.cat]=(byCat[t.cat]||0)+t.amt;});
     const data={월급:sal,고정지출:fxSum,이번달지출:spnt,잔여가용금액:avail,결혼자금현재:wFund,결혼자금목표:wg.target,목표연도:wg.year,카테고리별지출:byCat};
-    try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1000,system:"따뜻하고 친근한 한국어로 소통하는 가계부 AI 어시스턴트입니다.",messages:[{role:"user",content:`가계부 데이터:\n${JSON.stringify(data,null,2)}\n\n1. 💰 소비 현황 요약\n2. ⚠️ 주의 지출\n3. 💍 결혼 자금 전망\n4. 💡 절약 팁 3가지\n\n친근하게 작성해주세요.`}]})});
-      const j=await res.json();
-      if(j.error)setAiText(`오류: ${j.error.message}`);
-      else setAiText(j.content?.[0]?.text||"분석 결과를 가져오지 못했어요.");
-    }catch(e){setAiText(`연결 오류: ${e.message}`);}
+    try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,system:'따뜻하고 친근한 한국어로 소통하는 가계부 AI입니다.',messages:[{role:'user',content:`가계부 데이터:\n${JSON.stringify(data,null,2)}\n\n1.💰소비현황 2.⚠️주의지출 3.💍결혼자금전망 4.💡절약팁3가지 — 친근하게 작성해주세요.`}]})});const j=await res.json();if(j.error)setAiText(`오류: ${j.error.message}`);else setAiText(j.content?.[0]?.text||'분석 결과를 가져오지 못했어요.');}catch(e){setAiText(`연결 오류: ${e.message}`);}
     setAiLoad(false);
   };
   return(<div>
@@ -310,38 +344,109 @@ function AITab({pTx,spnt,avail,sal,wFund,wg,fxSum,aiText,setAiText,aiLoad,setAiL
   </div>);
 }
 
+// ── ⚙️ 관리자 탭 ──────────────────────────────────────────────────
+function AdminTab({cats,incCats,uCats,uIncCats,setModal,th}){
+  const Section=({title,items,onEdit,onDel,onAdd})=>(<div style={C(th)}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+      <div style={{fontSize:13,fontWeight:700,color:th.text}}>{title}</div>
+      <button onClick={onAdd} style={{background:th.primary,color:'#fff',border:'none',borderRadius:20,padding:'4px 12px',fontSize:11,cursor:'pointer',fontWeight:700}}>+ 추가</button>
+    </div>
+    {items.map(c=>(<div key={c.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}>
+      <div style={{width:40,height:40,borderRadius:12,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>{c.icon}</div>
+      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:th.text}}>{c.name}</div><div style={{fontSize:10,color:th.sub}}>아이콘: {c.icon}</div></div>
+      <div style={{display:'flex',gap:4}}>
+        <button onClick={()=>onEdit(c)} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button>
+        <button onClick={()=>onDel(c.id)} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button>
+      </div>
+    </div>))}
+  </div>);
+  const editCat=(c,list,uList)=>setModal({type:'catEdit',cat:c,onSave:(updated)=>{uList(list.map(x=>x.id===c.id?{...x,...updated}:x));},});
+  const addCat=(list,uList,prefix)=>setModal({type:'catEdit',cat:null,onSave:(nc)=>{uList([...list,{id:Date.now(),name:nc.name,icon:nc.icon}]);},});
+  const delCat=(id,list,uList)=>uList(list.filter(x=>x.id!==id));
+  return(<div>
+    <div style={{background:th.grad,borderRadius:16,padding:'16px',color:'#fff',marginBottom:10}}><div style={{fontSize:14,fontWeight:800}}>⚙️ 관리자 설정</div><div style={{fontSize:11,opacity:.8,marginTop:4}}>카테고리 이름과 아이콘을 자유롭게 수정하세요</div></div>
+    <Section title="💸 지출 카테고리" items={cats} onEdit={c=>editCat(c,cats,uCats)} onDel={id=>delCat(id,cats,uCats)} onAdd={()=>addCat(cats,uCats,'exp')}/>
+    <Section title="💰 수입 카테고리" items={incCats} onEdit={c=>editCat(c,incCats,uIncCats)} onDel={id=>delCat(id,incCats,uIncCats)} onAdd={()=>addCat(incCats,uIncCats,'inc')}/>
+    <div style={{...C(th),background:th.border,fontSize:11,color:th.sub,lineHeight:1.7}}>
+      💡 <b>팁:</b> 아이콘은 이모지를 직접 입력하면 돼요!<br/>
+      예: 🍕 🎮 💄 🐶 🌴 ✈️ 🎵 💊 등 원하는 이모지 입력
+    </div>
+  </div>);
+}
+
+// ── 모달 ─────────────────────────────────────────────────────────
 function Modals(props){
-  const{modal,setModal,sal,uSal,txns,addTx,updateTx,delTx,fx,uFx,iv,uIv,wg,uWg,th,theme,uTheme,initAdj,uAdj,baseA,fxOv,uFxOv}=props;
+  const{modal,setModal,sal,uSal,txns,addTx,updateTx,delTx,fx,uFx,iv,uIv,wg,uWg,th,theme,uTheme,initAdj,uAdj,baseA,fxOv,uFxOv,cats,incCats}=props;
   const close=()=>setModal(null);
   const OV={position:'fixed',inset:0,background:'rgba(0,0,0,.45)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'};
-  const SH={background:th.card,borderRadius:'24px 24px 0 0',padding:'24px 20px 32px',width:'100%',maxWidth:480,boxSizing:'border-box'};
+  const SH={background:th.card,borderRadius:'24px 24px 0 0',padding:'24px 20px',paddingBottom:`calc(24px + var(--sab))`,width:'100%',maxWidth:480,boxSizing:'border-box'};
   const I={width:'100%',border:`2px solid ${th.border}`,borderRadius:12,padding:'12px',fontSize:14,boxSizing:'border-box',outline:'none',fontFamily:'inherit',background:th.card,color:th.text};
   const p={OV,SH,I,close,th};
   if(modal.type==='sal')return <SalM {...p} sal={sal} uSal={uSal}/>;
-  if(modal.type==='txn')return <TxM {...p} addTx={addTx} updateTx={updateTx} delTx={delTx} editTx={modal.editTx} initDate={modal.data?.date}/>;
+  if(modal.type==='txn')return <TxM {...p} addTx={addTx} updateTx={updateTx} delTx={delTx} editTx={modal.editTx} initDate={modal.data?.date} cats={cats} incCats={incCats}/>;
   if(modal.type==='fx')return <FxM {...p} fx={fx} uFx={uFx} item={modal.data}/>;
   if(modal.type==='iv')return <IvM {...p} iv={iv} uIv={uIv} ivKey={modal.key}/>;
   if(modal.type==='wg')return <WgM {...p} wg={wg} uWg={uWg}/>;
   if(modal.type==='theme')return <ThemeM {...p} theme={theme} uTheme={uTheme}/>;
   if(modal.type==='adj')return <AdjM {...p} baseA={baseA} initAdj={initAdj} uAdj={uAdj}/>;
   if(modal.type==='fxmonth')return <FxMonthM {...p} fxId={modal.fxId} fxName={modal.fxName} fxDefaultDay={modal.fxDefaultDay} fxDefaultAmt={modal.fxDefaultAmt} monthKey={modal.monthKey} fxOv={fxOv} uFxOv={uFxOv}/>;
+  if(modal.type==='catEdit')return <CatEditM {...p} cat={modal.cat} onSave={modal.onSave}/>;
   return null;
 }
+
 function SalM({OV,SH,I,close,th,sal,uSal}){const[v,setV]=useState(sal);return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>💰 월급 수정</div><input type="number" value={v} onChange={e=>setV(Number(e.target.value))} style={{...I,fontSize:18,marginBottom:6}}/><div style={{fontSize:11,color:th.sub,marginBottom:14}}>현재 {won(v)}</div><button onClick={()=>{if(v>0){uSal(v);close();}}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>저장</button></div></div>);}
-function TxM({OV,SH,I,close,th,addTx,updateTx,delTx,editTx,initDate}){
-  const isEdit=!!editTx;const[tp,setTp]=useState(editTx?.tp||'exp');const[amt,setAmt]=useState(editTx?.amt||'');const[cat,setCat]=useState(editTx?.cat||'식비');const[memo,setMemo]=useState(editTx?.memo||'');const[date,setDate]=useState(editTx?.date||initDate||TODAY);
-  const iCats=tp==='exp'?CATS:INC_CATS;
+
+function TxM({OV,SH,I,close,th,addTx,updateTx,delTx,editTx,initDate,cats,incCats}){
+  const isEdit=!!editTx;
+  const[tp,setTp]=useState(editTx?.tp||'exp');
+  const[amt,setAmt]=useState(editTx?.amt||'');
+  const[cat,setCat]=useState(editTx?.cat||cats[0]?.name||'식비');
+  const[memo,setMemo]=useState(editTx?.memo||'');
+  const[date,setDate]=useState(editTx?.date||initDate||TODAY);
+  const iCats=tp==='exp'?cats:incCats;
   const save=()=>{if(!amt||Number(amt)<=0)return;const t={...(editTx||{}),id:editTx?.id||Date.now(),date,tp,amt:Number(amt),cat,memo};isEdit?updateTx(t):addTx(t);close();};
-  return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}><div style={{fontSize:16,fontWeight:700,color:th.text}}>{isEdit?'✏️ 내역 수정':'📝 내역 추가'}</div>{isEdit&&<button onClick={()=>{delTx(editTx.id);close();}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'5px 10px',fontSize:11,cursor:'pointer',color:'#dc2626',fontWeight:600}}>🗑 삭제</button>}</div><div style={{display:'flex',gap:8,marginBottom:12}}>{[['exp','💸 지출'],['inc','💰 수입']].map(([v,lb])=>(<button key={v} onClick={()=>{setTp(v);if(!isEdit)setCat(v==='exp'?'식비':'월급');}} style={{flex:1,border:'none',borderRadius:12,padding:'10px',fontSize:12,fontWeight:700,cursor:'pointer',background:tp===v?th.primary:th.border,color:tp===v?'#fff':th.sub}}>{lb}</button>))}</div><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...I,marginBottom:10}}/><input type="number" placeholder="금액 (원)" value={amt} onChange={e=>setAmt(e.target.value)} style={{...I,fontSize:18,marginBottom:10}}/><div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:10}}>{iCats.map(c=>(<button key={c} onClick={()=>setCat(c)} style={{border:'none',borderRadius:10,padding:'7px 4px',fontSize:10,cursor:'pointer',background:cat===c?th.primary:th.border,color:cat===c?'#fff':th.primary,fontWeight:600}}>{CE[c]||'📦'} {c}</button>))}</div>{cat==='파킹통장'&&<div style={{fontSize:10,color:th.primary,background:th.border,borderRadius:8,padding:'6px 10px',marginBottom:10}}>💳 파킹통장 잔액이 자동으로 업데이트돼요!</div>}<input type="text" placeholder="메모 (선택)" value={memo} onChange={e=>setMemo(e.target.value)} style={{...I,marginBottom:14}}/><button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>{isEdit?'수정 저장':'추가하기'}</button></div></div>);
+  return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+      <div style={{fontSize:16,fontWeight:700,color:th.text}}>{isEdit?'✏️ 내역 수정':'📝 내역 추가'}</div>
+      {isEdit&&<button onClick={()=>{delTx(editTx.id);close();}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'5px 10px',fontSize:11,cursor:'pointer',color:'#dc2626',fontWeight:600}}>🗑 삭제</button>}
+    </div>
+    <div style={{display:'flex',gap:8,marginBottom:12}}>{[['exp','💸 지출'],['inc','💰 수입']].map(([v,lb])=>(<button key={v} onClick={()=>{setTp(v);if(!isEdit)setCat((v==='exp'?cats:incCats)[0]?.name||'기타');}} style={{flex:1,border:'none',borderRadius:12,padding:'10px',fontSize:12,fontWeight:700,cursor:'pointer',background:tp===v?th.primary:th.border,color:tp===v?'#fff':th.sub}}>{lb}</button>))}</div>
+    <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...I,marginBottom:10}}/>
+    <input type="number" placeholder="금액 (원)" value={amt} onChange={e=>setAmt(e.target.value)} style={{...I,fontSize:18,marginBottom:10}}/>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:10,maxHeight:120,overflowY:'auto'}}>
+      {iCats.map(c=>(<button key={c.id} onClick={()=>setCat(c.name)} style={{border:'none',borderRadius:10,padding:'7px 4px',fontSize:10,cursor:'pointer',background:cat===c.name?th.primary:th.border,color:cat===c.name?'#fff':th.primary,fontWeight:600}}>{c.icon} {c.name}</button>))}
+    </div>
+    {cat==='파킹통장'&&<div style={{fontSize:10,color:th.primary,background:th.border,borderRadius:8,padding:'6px 10px',marginBottom:10}}>💳 파킹통장 잔액이 자동으로 업데이트돼요!</div>}
+    <input type="text" placeholder="메모 (선택)" value={memo} onChange={e=>setMemo(e.target.value)} style={{...I,marginBottom:14}}/>
+    <button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>{isEdit?'수정 저장':'추가하기'}</button>
+  </div></div>);
 }
+
+function CatEditM({OV,SH,I,close,th,cat,onSave}){
+  const[name,setName]=useState(cat?.name||'');
+  const[icon,setIcon]=useState(cat?.icon||'📦');
+  const save=()=>{if(!name.trim())return;onSave({name:name.trim(),icon:icon.trim()||'📦'});close();};
+  return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
+    <div style={{fontSize:16,fontWeight:700,marginBottom:16,color:th.text}}>{cat?'✏️ 카테고리 수정':'➕ 카테고리 추가'}</div>
+    <div style={{display:'flex',gap:10,marginBottom:14}}>
+      <div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>아이콘 (이모지)</div><input value={icon} onChange={e=>setIcon(e.target.value)} style={{...I,fontSize:28,textAlign:'center'}} placeholder="🍚"/></div>
+      <div style={{flex:3}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>카테고리 이름</div><input value={name} onChange={e=>setName(e.target.value)} placeholder="예: 식비" style={I}/></div>
+    </div>
+    <div style={{...I,marginBottom:14,fontSize:11,color:th.sub,background:th.border,border:'none',lineHeight:1.8}}>
+      💡 자주 쓰는 이모지: 🍚☕🛍️🚇📱🏠🎬💊💳📦<br/>💰💸💵✈️🎮💄🐕🎵📚🏋️🍷🎁
+    </div>
+    <button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>{cat?'저장':'추가'}</button>
+  </div></div>);
+}
+
 function FxM({OV,SH,I,close,th,fx,uFx,item}){const[name,setName]=useState(item?.name||'');const[amt,setAmt]=useState(item?.amount||'');const[day,setDay]=useState(item?.day||1);const[cat,setCat]=useState(item?.cat||'생활비');const FXCATS=['구독','주거','보험','통신','교통','저축','생활비','기타'];const save=()=>{if(!name||!amt||Number(amt)<=0)return;uFx(item?fx.map(f=>f.id===item.id?{...f,name,amount:Number(amt),day:Number(day),cat}:f):[...fx,{id:Date.now(),name,amount:Number(amt),day:Number(day),cat}]);close();};return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>{item?'✏️ 고정지출 수정':'➕ 고정지출 추가'}</div><input placeholder="항목명" value={name} onChange={e=>setName(e.target.value)} style={{...I,marginBottom:10}}/><input type="number" placeholder="금액 (원)" value={amt} onChange={e=>setAmt(e.target.value)} style={{...I,fontSize:18,marginBottom:10}}/><div style={{display:'flex',gap:10,marginBottom:14}}><div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>기본 지출일</div><input type="number" min="1" max="31" value={day} onChange={e=>setDay(e.target.value)} style={I}/></div><div style={{flex:2}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>카테고리</div><select value={cat} onChange={e=>setCat(e.target.value)} style={{...I}}>{FXCATS.map(c=><option key={c}>{c}</option>)}</select></div></div><button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>저장</button></div></div>);}
 function FxMonthM({OV,SH,I,close,th,fxId,fxName,fxDefaultDay,fxDefaultAmt,monthKey,fxOv,uFxOv}){const ov=fxOv[monthKey]?.[fxId];const[d,setD]=useState(typeof ov==='number'?ov:(ov?.day??fxDefaultDay));const[a,setA]=useState(typeof ov==='number'?fxDefaultAmt:(ov?.amount??fxDefaultAmt));const isOv=!!ov;const save=()=>{uFxOv({...fxOv,[monthKey]:{...(fxOv[monthKey]||{}),[fxId]:{day:Number(d),amount:Number(a)}}});close();};const reset=()=>{const n={...fxOv};if(n[monthKey]){delete n[monthKey][fxId];if(!Object.keys(n[monthKey]).length)delete n[monthKey];}uFxOv(n);close();};return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>📌 {fxName} 이번 달 수정</div><div style={{fontSize:12,color:th.sub,marginBottom:14,lineHeight:1.6}}><b style={{color:th.primary}}>{monthKey}</b> 이번 달만 변경돼요.<br/>기본: {fxDefaultDay}일 / {won(fxDefaultAmt)}</div><div style={{display:'flex',gap:10,marginBottom:14}}><div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>출금일</div><input type="number" min="1" max="31" value={d} onChange={e=>setD(e.target.value)} style={{...I,fontSize:20,textAlign:'center'}}/></div><div style={{flex:2}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>금액</div><input type="number" value={a} onChange={e=>setA(e.target.value)} style={{...I,fontSize:16}}/></div></div><button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer',marginBottom:8}}>이번 달 적용</button>{isOv&&<button onClick={reset} style={{width:'100%',background:th.border,color:th.sub,border:'none',borderRadius:12,padding:'11px',fontSize:12,cursor:'pointer'}}>기본값으로 초기화</button>}</div></div>);}
 function IvM({OV,SH,I,close,th,iv,uIv,ivKey}){const item=iv[ivKey];const[cur,setCur]=useState(item.current);const[mo,setMo]=useState(item.monthly);return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>✏️ {item.name} 수정</div><div style={{fontSize:11,color:th.sub,marginBottom:4}}>현재 잔액</div><input type="number" value={cur} onChange={e=>setCur(e.target.value)} style={{...I,fontSize:18,marginBottom:10}}/>{item.monthly>0&&<><div style={{fontSize:11,color:th.sub,marginBottom:4}}>월 납입액</div><input type="number" value={mo} onChange={e=>setMo(e.target.value)} style={{...I,fontSize:18,marginBottom:10}}/></>}<button onClick={()=>{uIv({...iv,[ivKey]:{...item,current:Number(cur),monthly:Number(mo)}});close();}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer',marginTop:4}}>저장</button></div></div>);}
 function WgM({OV,SH,I,close,th,wg,uWg}){const[t,setT]=useState(wg.target);const[y,setY]=useState(wg.year);return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>💍 결혼 자금 목표 수정</div><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 금액</div><input type="number" value={t} onChange={e=>setT(e.target.value)} style={{...I,fontSize:18,marginBottom:10}}/><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 연도</div><input type="number" value={y} onChange={e=>setY(e.target.value)} style={{...I,fontSize:18,marginBottom:14}}/><button onClick={()=>{if(t>0&&y>2024){uWg({target:Number(t),year:Number(y)});close();}}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>저장</button></div></div>);}
 function AdjM({OV,SH,I,close,th,baseA,initAdj,uAdj}){const[v,setV]=useState(baseA-initAdj);return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>💰 이번 달 잔액 설정</div><div style={{fontSize:12,color:th.sub,marginBottom:14,lineHeight:1.6}}>기본 가용 금액은 <b style={{color:th.primary}}>{won(baseA)}</b>예요.</div><input type="number" value={v} onChange={e=>setV(e.target.value)} style={{...I,fontSize:20,marginBottom:6}}/><div style={{fontSize:11,color:th.sub,marginBottom:16}}>→ 이미 쓴 금액 <b style={{color:'#dc2626'}}>{won(Math.max(0,baseA-Number(v)))}</b> 반영</div><button onClick={()=>{uAdj(Math.max(0,baseA-Number(v)));close();}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>적용하기</button></div></div>);}
-function ThemeM({OV,SH,close,th,theme,uTheme}){return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:16,color:th.text}}>🎨 테마 선택</div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,maxHeight:400,overflowY:'auto'}}>{Object.values(THEMES).map(t=>(<button key={t.id} onClick={()=>{uTheme(t.id);close();}} style={{border:`3px solid ${theme===t.id?t.primary:'transparent'}`,borderRadius:14,padding:'10px',cursor:'pointer',background:t.bg,textAlign:'center'}}><div style={{background:t.grad,borderRadius:8,height:30,marginBottom:6}}/><div style={{fontSize:12,fontWeight:700,color:t.text}}>{t.name}</div>{theme===t.id&&<div style={{fontSize:9,color:t.primary,marginTop:2,fontWeight:600}}>✓ 현재</div>}</button>))}</div></div></div>);}
+function ThemeM({OV,SH,close,th,theme,uTheme}){return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:16,color:th.text}}>🎨 테마 선택</div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,maxHeight:380,overflowY:'auto'}}>{Object.values(THEMES).map(t=>(<button key={t.id} onClick={()=>{uTheme(t.id);close();}} style={{border:`3px solid ${theme===t.id?t.primary:'transparent'}`,borderRadius:14,padding:'10px',cursor:'pointer',background:t.bg,textAlign:'center'}}><div style={{background:t.grad,borderRadius:8,height:28,marginBottom:6}}/><div style={{fontSize:12,fontWeight:700,color:t.text}}>{t.name}</div>{theme===t.id&&<div style={{fontSize:9,color:t.primary,marginTop:2,fontWeight:600}}>✓ 현재</div>}</button>))}</div></div></div>);}
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root=ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App/>);
   </script>
 </body>
