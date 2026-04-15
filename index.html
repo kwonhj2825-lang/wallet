@@ -126,7 +126,7 @@ function App(){
       {/* 헤더 - 아이폰 상단 베젤(노치/다이나믹 아일랜드) 대응 */}
       <div style={{background:th.grad,paddingTop:`calc(14px + var(--sat))`,paddingBottom:14,paddingLeft:16,paddingRight:16,color:'#fff'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-          <div><div style={{fontSize:15,fontWeight:800}}>💜 혜진이의 가계부</div><div style={{fontSize:11,opacity:.75,marginTop:2}}>{pr.label} · {pr.range}</div></div>
+          <div><div style={{fontSize:15,fontWeight:800}}>💜 내집 마련 </div><div style={{fontSize:11,opacity:.75,marginTop:2}}>{pr.label} · {pr.range}</div></div>
           <div style={{display:'flex',gap:6}}>
             <button onClick={()=>setModal({type:'sal'})} style={{background:'rgba(255,255,255,.2)',border:'none',color:'#fff',borderRadius:20,padding:'5px 10px',fontSize:11,cursor:'pointer',fontWeight:600}}>💰 월급</button>
             <button onClick={()=>setModal({type:'theme'})} style={{background:'rgba(255,255,255,.2)',border:'none',color:'#fff',borderRadius:20,padding:'5px 10px',fontSize:11,cursor:'pointer',fontWeight:600}}>🎨 테마</button>
