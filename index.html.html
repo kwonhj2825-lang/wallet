@@ -161,6 +161,7 @@ function App(){
      ['hj9-theme',setTheme],['hj9-adj',setInitAdj],['hj9-fxov',setFxOv],
      ['hj9-appname',setAppName],['hj9-cats',setCats],['hj9-incCats',setIncCats],['hj9-fxCats',setFxCats],['hj9-simdata',setSimData]
     ].forEach(([k,fn])=>{const v=lv(k);if(v)fn(v);});
+    const sivo=lv('hj9-ivov');if(sivo)setIvOv(sivo);
     const sfx=lv('hj9-fx');if(sfx)setFx(sfx.map(f=>({...f,df:f.df||f.deletedFrom||null})));
     const si=lv('hj9-iv');if(si)setIv({...IV0,...si});
     if([10,20,30].includes(TDN)){const ln=lv('hj9-lastnoti');if(!ln||ln!==TODAY){setNoti('📊 오늘은 투자 내역 업데이트 날이에요! 자산 탭에서 잔고를 업데이트해 주세요 💜');sv('hj9-lastnoti',TODAY);}}
@@ -174,6 +175,7 @@ function App(){
   const uWg=us('hj9-wg',setWg),uAdj=us('hj9-adj',setInitAdj),uTheme=us('hj9-theme',setTheme);
   const uFxOv=us('hj9-fxov',setFxOv),uCats=us('hj9-cats',setCats),uIncCats=us('hj9-incCats',setIncCats);
   const uFxCats=us('hj9-fxCats',setFxCats),uSimData=us('hj9-simdata',setSimData);
+  const uIvOv=us('hj9-ivov',setIvOv);
 
   const addTx=t=>{const n=[...txns,t];setTxns(n);sv('hj9-tx',n);uIv(applyAcct(t,1,iv));};
   const delTx=id=>{const t=txns.find(x=>x.id===id);const n=txns.filter(x=>x.id!==id);setTxns(n);sv('hj9-tx',n);if(t)uIv(applyAcct(t,-1,iv));};
