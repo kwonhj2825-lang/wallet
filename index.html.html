@@ -359,7 +359,7 @@ function LedgerTab({txns,delTx,updateTx,setModal,th,fx,fxOv,curSal,salOv,salMK,u
   const cyTotalExp=cyTxExp+cyFxTotal+ivTotal;
   const cyTotalInc=cyTxInc+cycSal;
   // ★ 순 소비: 고정지출·투자·법인카드 제외, 현금+신용카드만
-  const cyPersonalSpnt=cyTxns.filter(t=>t.tp==='exp'&&t.payType!=='biz').reduce((s,t)=>s+t.amt,0);
+  const cyPersonalSpnt=cyTxns.filter(t=>t.tp==='exp'&&t.payType!=='biz'&&t.cat!=='저금통').reduce((s,t)=>s+t.amt,0);
 
   // ★ 소비 통계 (투자/저금통 제외, 고정비용 toggle)
   const statsTxByCat={};
