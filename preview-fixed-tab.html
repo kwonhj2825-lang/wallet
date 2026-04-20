@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no"/>
+  <title>[미리보기] 고정 탭 개편안</title>
+  <meta name="theme-color" content="#7c3aed"/>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box;}body{margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+    input,select,textarea{font-size:16px!important;-webkit-text-size-adjust:none;}
+    .phone{max-width:420px;margin:12px auto;background:#fbfaff;min-height:calc(100vh - 24px);border-radius:24px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,0.1);}
+    .banner{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:14px;line-height:1.5;}
+  </style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState}=React;
+
+// ── 원본 index.html.html에서 가져온 헬퍼/테마 ───────────────
+const won=n=>(Math.abs(n||0)).toLocaleString('ko-KR')+'원';
+const fmtNum=v=>{if(v===''||v===null||v===undefined)return'';const n=String(v).replace(/[^0-9-]/g,'');if(n===''||n==='-')return n;return Number(n).toLocaleString('ko-KR');};
+const parseNum=v=>{if(v===''||v===null||v===undefined)return 0;const n=String(v).replace(/[^0-9-]/g,'');return n===''||n==='-'?0:Number(n);};
+
+const th={primary:'#8b5cf6',light:'#c4b5fd',bg:'#fbfaff',card:'#fff',grad:'linear-gradient(135deg,#7c3aed,#a78bfa)',text:'#374151',sub:'#9ca3af',border:'#ede9fe',green:'#059669'};
+const Cd=(x={})=>({background:th.card,borderRadius:16,padding:'14px',boxShadow:'0 2px 10px rgba(0,0,0,0.06)',marginBottom:10,...x});
+
+// ── 샘플 데이터 (원본 FX0와 동일) ────────────────────────────
+const FX_SAMPLE=[
+  {id:1,name:"유튜브",amount:14900,day:16,cat:"구독",df:null},
+  {id:2,name:"티빙",amount:5500,day:24,cat:"구독",df:null},
+  {id:3,name:"넷플릭스",amount:7000,day:12,cat:"구독",df:null},
+  {id:4,name:"월세",amount:170000,day:25,cat:"주거",df:null},
+  {id:5,name:"태우 여행통장",amount:100000,day:25,cat:"저축",df:null},
+  {id:6,name:"보험료",amount:174702,day:6,cat:"보험",df:null},
+  {id:7,name:"통신비",amount:13020,day:23,cat:"통신",df:null},
+  {id:8,name:"인터넷비",amount:23100,day:15,cat:"통신",df:null},
+  {id:9,name:"쿠팡",amount:7890,day:4,cat:"구독",df:null},
+  {id:10,name:"교통비",amount:75000,day:10,cat:"교통",df:null},
+  {id:11,name:"관리비",amount:200000,day:25,cat:"주거",df:null},
+];
+const FX_CAT_ICONS={'구독':'📱','주거':'🏠','보험':'🛡️','통신':'📞','교통':'🚇','저축':'💰','생활비':'🏪','기타':'📌'};
+
+// ── 고정 수입 샘플 (신규 추가 데이터 모델) ────────────────────
+// 구조: {id, name, amount, day, df}
+const INCOME_SAMPLE=[
+  {id:1,name:'월급',amount:3600000,day:21,df:null},
+  {id:2,name:'부업 정산',amount:200000,day:5,df:null},
+];
+
+// ── 공용 입력 모달 (수입/지출 공용) ──────────────────────────
+function EditModal({title,initial,onSave,onClose,showCategory,categories}){
+  const [name,setName]=useState(initial?.name||'');
+  const [amount,setAmount]=useState(initial?.amount||0);
+  const [day,setDay]=useState(initial?.day||1);
+  const [cat,setCat]=useState(initial?.cat||(categories?.[0]||''));
+  const canSave=name.trim()&&amount>0&&day>=1&&day<=31;
+  return (
+    <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:100,padding:20}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:'#fff',borderRadius:16,padding:20,width:'100%',maxWidth:360}}>
+        <div style={{fontSize:15,fontWeight:800,color:th.text,marginBottom:14}}>{title}</div>
+        <label style={{fontSize:11,color:th.sub,fontWeight:600}}>이름</label>
+        <input value={name} onChange={e=>setName(e.target.value)} placeholder="예: 월급, 부업 정산" style={{width:'100%',padding:'10px 12px',border:`1.5px solid ${th.border}`,borderRadius:10,marginTop:4,marginBottom:12,outline:'none'}}/>
+        <label style={{fontSize:11,color:th.sub,fontWeight:600}}>금액</label>
+        <input inputMode="numeric" value={fmtNum(amount)} onChange={e=>setAmount(parseNum(e.target.value))} placeholder="0" style={{width:'100%',padding:'10px 12px',border:`1.5px solid ${th.border}`,borderRadius:10,marginTop:4,marginBottom:12,outline:'none',textAlign:'left'}}/>
+        <label style={{fontSize:11,color:th.sub,fontWeight:600}}>매월 날짜 (1~31)</label>
+        <input type="number" min={1} max={31} value={day} onChange={e=>setDay(Math.max(1,Math.min(31,Number(e.target.value)||1)))} style={{width:'100%',padding:'10px 12px',border:`1.5px solid ${th.border}`,borderRadius:10,marginTop:4,marginBottom:12,outline:'none',textAlign:'left'}}/>
+        {showCategory&&(<>
+          <label style={{fontSize:11,color:th.sub,fontWeight:600}}>카테고리</label>
+          <select value={cat} onChange={e=>setCat(e.target.value)} style={{width:'100%',padding:'10px 12px',border:`1.5px solid ${th.border}`,borderRadius:10,marginTop:4,marginBottom:12,outline:'none',background:'#fff'}}>
+            {categories.map(c=>(<option key={c} value={c}>{c}</option>))}
+          </select>
+        </>)}
+        <div style={{display:'flex',gap:8,marginTop:4}}>
+          <button onClick={onClose} style={{flex:1,padding:'11px',border:'none',borderRadius:10,background:th.border,color:th.text,fontWeight:700,cursor:'pointer'}}>취소</button>
+          <button disabled={!canSave} onClick={()=>onSave({name:name.trim(),amount,day,cat})} style={{flex:1,padding:'11px',border:'none',borderRadius:10,background:canSave?th.primary:th.border,color:canSave?'#fff':th.sub,fontWeight:700,cursor:canSave?'pointer':'not-allowed'}}>저장</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 상단 합계 요약 카드 (수입/지출 나란히) ────────────────
+function SummaryCard({incomeTotal,incomeCount,expenseTotal,expenseCount}){
+  const net=incomeTotal-expenseTotal;
+  const cell=(label,amount,count,grad)=>(
+    <div style={{flex:1,background:grad,borderRadius:14,padding:'14px',color:'#fff',minWidth:0}}>
+      <div style={{fontSize:10,opacity:.85}}>{label}</div>
+      <div style={{fontSize:20,fontWeight:800,marginTop:4,wordBreak:'break-all'}}>{won(amount)}</div>
+      <div style={{fontSize:10,opacity:.7,marginTop:2}}>{count}개 항목</div>
+    </div>
+  );
+  return (
+    <div style={{marginBottom:10}}>
+      <div style={{display:'flex',gap:8}}>
+        {cell('💵 고정 수입 합계',incomeTotal,incomeCount,`linear-gradient(135deg,${th.green},#34d399)`)}
+        {cell('📌 고정 지출 합계',expenseTotal,expenseCount,th.grad)}
+      </div>
+      <div style={{marginTop:8,background:'#fff',borderRadius:12,padding:'10px 12px',display:'flex',justifyContent:'space-between',alignItems:'center',boxShadow:'0 2px 10px rgba(0,0,0,0.05)'}}>
+        <div style={{fontSize:11,color:th.sub,fontWeight:600}}>월 순액 (수입 − 지출)</div>
+        <div style={{fontSize:15,fontWeight:800,color:net>=0?th.green:'#dc2626'}}>{net>=0?'+':'−'}{won(net)}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── 고정 수입 섹션 (아코디언) ──────────────────────────────
+function IncomeSection({income,setIncome}){
+  const [open,setOpen]=useState(true);
+  const [modal,setModal]=useState(null); // {mode:'add'|'edit', item?}
+  const active=income.filter(i=>!i.df);
+  const total=active.reduce((s,i)=>s+(i.amount||0),0);
+  const handleSave=d=>{
+    if(modal.mode==='add'){
+      const id=Math.max(0,...income.map(i=>i.id))+1;
+      setIncome([...income,{id,name:d.name,amount:d.amount,day:d.day,df:null}]);
+    }else{
+      setIncome(income.map(i=>i.id===modal.item.id?{...i,name:d.name,amount:d.amount,day:d.day}:i));
+    }
+    setModal(null);
+  };
+  const handleDel=item=>{
+    if(!confirm(`"${item.name}" 고정 수입을 삭제할까요?`))return;
+    setIncome(income.filter(i=>i.id!==item.id));
+  };
+  return (
+    <div>
+      <div style={Cd({padding:0,overflow:'hidden'})}>
+        <button onClick={()=>setOpen(o=>!o)} style={{width:'100%',background:`linear-gradient(135deg,${th.green},#34d399)`,border:'none',padding:'14px 16px',color:'#fff',textAlign:'left',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div>
+            <div style={{fontSize:12,fontWeight:800}}>💵 고정 수입</div>
+            <div style={{fontSize:10,opacity:.85,marginTop:2}}>{active.length}개 · {won(total)}</div>
+          </div>
+          <div style={{fontSize:20,fontWeight:700,transition:'transform 0.2s',transform:open?'rotate(180deg)':'rotate(0deg)'}}>▾</div>
+        </button>
+        {open&&(
+          <div style={{padding:14,background:th.card}}>
+            <button onClick={()=>setModal({mode:'add'})} style={{width:'100%',background:'#dcfce7',border:`2px dashed #86efac`,borderRadius:14,padding:'12px',fontSize:12,color:th.green,cursor:'pointer',fontWeight:700,marginBottom:10}}>+ 새 고정 수입 추가</button>
+            {active.length===0?(
+              <div style={{fontSize:11,color:th.sub,padding:'16px 0',textAlign:'center'}}>아직 등록된 고정 수입이 없어요.</div>
+            ):active.map(item=>(
+              <div key={item.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:600,color:th.text}}>{item.name}</div>
+                  <div style={{fontSize:10,color:th.sub}}>매월 {item.day}일 입금 · {won(item.amount)}</div>
+                </div>
+                <div style={{display:'flex',gap:4}}>
+                  <button onClick={()=>setModal({mode:'edit',item})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button>
+                  <button onClick={()=>handleDel(item)} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {modal&&(<EditModal title={modal.mode==='add'?'새 고정 수입':'고정 수입 편집'} initial={modal.item} onSave={handleSave} onClose={()=>setModal(null)}/>)}
+    </div>
+  );
+}
+
+// ── 고정 지출 섹션 (전체 아코디언) ─────────────────────────
+function ExpenseSection({fx,setFx,fxCats}){
+  const [open,setOpen]=useState(true);
+  const [modal,setModal]=useState(null);
+  const active=fx.filter(f=>!f.df);
+  const total=active.reduce((s,f)=>s+(f.amount||0),0);
+  const byCat={};
+  active.forEach(f=>{byCat[f.cat]=byCat[f.cat]||[];byCat[f.cat].push(f);});
+  const getIcon=name=>FX_CAT_ICONS[name]||'📌';
+  const handleSave=d=>{
+    if(modal.mode==='add'){
+      const id=Math.max(0,...fx.map(f=>f.id))+1;
+      setFx([...fx,{id,name:d.name,amount:d.amount,day:d.day,cat:d.cat,df:null}]);
+    }else{
+      setFx(fx.map(f=>f.id===modal.item.id?{...f,name:d.name,amount:d.amount,day:d.day,cat:d.cat}:f));
+    }
+    setModal(null);
+  };
+  const handleDel=item=>{
+    if(!confirm(`"${item.name}" 고정 지출을 삭제할까요?`))return;
+    setFx(fx.filter(f=>f.id!==item.id));
+  };
+  return (
+    <div>
+      <div style={Cd({padding:0,overflow:'hidden'})}>
+        <button onClick={()=>setOpen(o=>!o)} style={{width:'100%',background:th.grad,border:'none',padding:'14px 16px',color:'#fff',textAlign:'left',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div>
+            <div style={{fontSize:12,fontWeight:800}}>📌 고정 지출</div>
+            <div style={{fontSize:10,opacity:.85,marginTop:2}}>{active.length}개 · {won(total)}</div>
+          </div>
+          <div style={{fontSize:20,fontWeight:700,transition:'transform 0.2s',transform:open?'rotate(180deg)':'rotate(0deg)'}}>▾</div>
+        </button>
+        {open&&(
+          <div style={{padding:14,background:th.card}}>
+            <button onClick={()=>setModal({mode:'add'})} style={{width:'100%',background:th.border,border:`2px dashed ${th.light}`,borderRadius:14,padding:'12px',fontSize:12,color:th.primary,cursor:'pointer',fontWeight:700,marginBottom:10}}>+ 새 고정 지출 추가</button>
+            {Object.entries(byCat).map(([cat,items])=>(
+              <div key={cat} style={{background:'#fafaff',borderRadius:14,padding:12,marginBottom:8,border:`1px solid ${th.border}`}}>
+                <div style={{fontSize:11,fontWeight:700,color:th.sub,marginBottom:8}}>{getIcon(cat)} {cat}</div>
+                {items.map(f=>(
+                  <div key={f.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:th.text}}>{f.name}</div>
+                      <div style={{fontSize:10,color:th.sub}}>매월 {f.day}일 · {won(f.amount)}</div>
+                    </div>
+                    <div style={{display:'flex',gap:4}}>
+                      <button onClick={()=>setModal({mode:'edit',item:f})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button>
+                      <button onClick={()=>handleDel(f)} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {modal&&(<EditModal title={modal.mode==='add'?'새 고정 지출':'고정 지출 편집'} initial={modal.item} onSave={handleSave} onClose={()=>setModal(null)} showCategory={true} categories={fxCats}/>)}
+    </div>
+  );
+}
+
+function PreviewApp(){
+  const [income,setIncome]=useState(INCOME_SAMPLE);
+  const [fx,setFx]=useState(FX_SAMPLE);
+  const fxCats=['구독','주거','보험','통신','교통','저축','생활비','기타'];
+  const incomeActive=income.filter(i=>!i.df);
+  const fxActive=fx.filter(f=>!f.df);
+  const incomeTotal=incomeActive.reduce((s,i)=>s+(i.amount||0),0);
+  const expenseTotal=fxActive.reduce((s,f)=>s+(f.amount||0),0);
+  return (
+    <div className="phone">
+      <div className="banner">
+        🧪 <b>미리보기 모드</b> — 이 페이지는 원본 앱을 변경하지 않습니다. 추가/편집/삭제/아코디언 동작을 확인해 보세요. 새로고침하면 샘플 데이터로 초기화됩니다.
+      </div>
+      <div style={{fontSize:18,fontWeight:800,color:th.text,marginBottom:14}}>📌 고정비용</div>
+      <SummaryCard incomeTotal={incomeTotal} incomeCount={incomeActive.length} expenseTotal={expenseTotal} expenseCount={fxActive.length}/>
+      <IncomeSection income={income} setIncome={setIncome}/>
+      <ExpenseSection fx={fx} setFx={setFx} fxCats={fxCats}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<PreviewApp/>);
+</script>
+</body>
+</html>
