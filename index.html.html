@@ -37,7 +37,9 @@
     *{box-sizing:border-box;}body{margin:0;padding:0;}
     :root{--sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom);}
     /* iOS 자동 확대 방지: 16px 이상이면 확대 안 됨 */
-    input,select,textarea{font-size:16px!important;-webkit-text-size-adjust:none;}
+    input,select,textarea{font-size:16px!important;-webkit-text-size-adjust:none;scroll-margin-top:80px;scroll-margin-bottom:80px;}
+    input.compact{font-size:12px!important;}
+    html,body{overscroll-behavior:contain;}
   </style>
 </head>
 <body><div id="root"></div>
@@ -154,16 +156,17 @@ const fmtNum=v=>{if(v===''||v===null||v===undefined)return'';const n=String(v).r
 const parseNum=v=>{if(v===''||v===null||v===undefined)return 0;const n=String(v).replace(/[^0-9-]/g,'');return n===''||n==='-'?0:Number(n);};
 
 const THEMES={
-  lavender:{id:'lavender',name:'💜 라벤더',primary:'#8b5cf6',light:'#c4b5fd',bg:'#fbfaff',card:'#fff',grad:'linear-gradient(135deg,#7c3aed,#a78bfa)',text:'#374151',sub:'#9ca3af',border:'#ede9fe',green:'#059669'},
-  rose:    {id:'rose',    name:'🌸 로즈',  primary:'#e879a0',light:'#fbcfe8',bg:'#fff9fc',card:'#fff',grad:'linear-gradient(135deg,#db2777,#f9a8d4)',text:'#374151',sub:'#9ca3af',border:'#fce7f3',green:'#059669'},
-  peach:   {id:'peach',  name:'🍑 피치',  primary:'#f97316',light:'#fed7aa',bg:'#fffcf8',card:'#fff',grad:'linear-gradient(135deg,#ea580c,#fb923c)',text:'#374151',sub:'#9ca3af',border:'#ffedd5',green:'#059669'},
-  sage:    {id:'sage',   name:'🌿 세이지', primary:'#16a34a',light:'#86efac',bg:'#f8fff9',card:'#fff',grad:'linear-gradient(135deg,#15803d,#4ade80)',text:'#374151',sub:'#9ca3af',border:'#dcfce7',green:'#2563eb'},
-  sky:     {id:'sky',    name:'🩵 스카이', primary:'#0284c7',light:'#7dd3fc',bg:'#f5fbff',card:'#fff',grad:'linear-gradient(135deg,#0369a1,#38bdf8)',text:'#374151',sub:'#9ca3af',border:'#e0f2fe',green:'#059669'},
-  aqua:    {id:'aqua',   name:'🌊 아쿠아', primary:'#0d9488',light:'#5eead4',bg:'#f3fffe',card:'#fff',grad:'linear-gradient(135deg,#0f766e,#2dd4bf)',text:'#374151',sub:'#9ca3af',border:'#ccfbf1',green:'#7c3aed'},
-  blossom: {id:'blossom',name:'🌺 블로썸', primary:'#e11d48',light:'#fda4af',bg:'#fffbfb',card:'#fff',grad:'linear-gradient(135deg,#be123c,#fb7185)',text:'#374151',sub:'#9ca3af',border:'#ffe4e6',green:'#059669'},
-  butter:  {id:'butter', name:'🍯 버터',   primary:'#ca8a04',light:'#fde68a',bg:'#fffffa',card:'#fff',grad:'linear-gradient(135deg,#a16207,#fbbf24)',text:'#374151',sub:'#9ca3af',border:'#fef9c3',green:'#059669'},
-  lilac:   {id:'lilac',  name:'🪻 라일락', primary:'#9333ea',light:'#d8b4fe',bg:'#fefbff',card:'#fff',grad:'linear-gradient(135deg,#7e22ce,#c084fc)',text:'#374151',sub:'#9ca3af',border:'#f3e8ff',green:'#059669'},
-  dark:    {id:'dark',   name:'🌙 다크',   primary:'#818cf8',light:'#c7d2fe',bg:'#0f172a',card:'#1e293b',grad:'linear-gradient(135deg,#1e1b4b,#4338ca)',text:'#f1f5f9',sub:'#64748b',border:'#334155',green:'#34d399'},
+  // 🎨 colorhunt.co 각 카테고리 인기 팔레트 기반
+  pastel:  {id:'pastel', name:'🍑 파스텔', primary:'#ffa4a4',light:'#ffbdbd',bg:'#fffcf5',card:'#fff',grad:'linear-gradient(135deg,#ff8787,#ffa4a4)',text:'#374151',sub:'#9ca3af',border:'#ffe3e3',green:'#5fa58b'},
+  vintage: {id:'vintage',name:'🌿 빈티지', primary:'#89986d',light:'#c5d89d',bg:'#fbf9ee',card:'#fff',grad:'linear-gradient(135deg,#89986d,#9cab84)',text:'#374151',sub:'#9ca3af',border:'#e8e7d2',green:'#b87c4c'},
+  retro:   {id:'retro',  name:'💋 레트로', primary:'#dc143c',light:'#f7cac9',bg:'#fff8f0',card:'#fff',grad:'linear-gradient(135deg,#dc143c,#f75270)',text:'#374151',sub:'#9ca3af',border:'#fde0de',green:'#059669'},
+  neon:    {id:'neon',   name:'⚡ 네온',   primary:'#ff204e',light:'#ff6b8b',bg:'#faf6fb',card:'#fff',grad:'linear-gradient(135deg,#5d0e41,#a0153e)',text:'#374151',sub:'#9ca3af',border:'#ffd5df',green:'#059669'},
+  warm:    {id:'warm',   name:'🔥 웜',     primary:'#fd7979',light:'#fdacac',bg:'#fffaf5',card:'#fff',grad:'linear-gradient(135deg,#fd7979,#fdacac)',text:'#374151',sub:'#9ca3af',border:'#fde5d6',green:'#059669'},
+  cold:    {id:'cold',   name:'❄️ 쿨',     primary:'#748dae',light:'#9ecad6',bg:'#f5faff',card:'#fff',grad:'linear-gradient(135deg,#748dae,#9ecad6)',text:'#374151',sub:'#9ca3af',border:'#d7e4f2',green:'#059669'},
+  fall:    {id:'fall',   name:'🍂 가을',   primary:'#776b5d',light:'#b0a695',bg:'#faf5ed',card:'#fff',grad:'linear-gradient(135deg,#776b5d,#b0a695)',text:'#374151',sub:'#9ca3af',border:'#ebe3d5',green:'#c7253e'},
+  night:   {id:'night',  name:'🌙 나이트', primary:'#1b1a55',light:'#535c91',bg:'#f5f5fb',card:'#fff',grad:'linear-gradient(135deg,#070f2b,#1b1a55)',text:'#374151',sub:'#9ca3af',border:'#d9d8e8',green:'#059669'},
+  sunset:  {id:'sunset', name:'🌇 선셋',   primary:'#f0a8d0',light:'#ffc6c6',bg:'#fffaf5',card:'#fff',grad:'linear-gradient(135deg,#f0a8d0,#ffc6c6)',text:'#374151',sub:'#9ca3af',border:'#ffe1ea',green:'#059669'},
+  sea:     {id:'sea',    name:'🌊 바다',   primary:'#48a6a7',light:'#9acbd0',bg:'#f4faf9',card:'#fff',grad:'linear-gradient(135deg,#006a71,#48a6a7)',text:'#374151',sub:'#9ca3af',border:'#cee8ea',green:'#c7253e'},
   cherry_dot:{id:'cherry_dot',name:'🌸 벚꽃',primary:'#f472b6',light:'#fbcfe8',bg:'#fff8fc',card:'#fffdfe',grad:'linear-gradient(135deg,#db2777,#f9a8d4)',text:'#374151',sub:'#9ca3af',border:'#fce7f3',green:'#059669',pat:'radial-gradient(circle,#f472b628 2px,transparent 2px)',patSz:'22px 22px'},
   star:    {id:'star',   name:'⭐ 별빛',   primary:'#f59e0b',light:'#fde68a',bg:'#fffef7',card:'#fffffe',grad:'linear-gradient(135deg,#b45309,#fbbf24)',text:'#374151',sub:'#9ca3af',border:'#fef3c7',green:'#059669',pat:'radial-gradient(circle,#fbbf2435 1.5px,transparent 1.5px)',patSz:'22px 22px'},
   candy:   {id:'candy',  name:'🍭 캔디',   primary:'#ec4899',light:'#f9a8d4',bg:'#fff7fb',card:'#fffdfe',grad:'linear-gradient(135deg,#be185d,#f472b6)',text:'#374151',sub:'#9ca3af',border:'#fce7f3',green:'#059669',pat:'repeating-linear-gradient(45deg,#ec489918 0,#ec489918 3px,transparent 3px,transparent 18px)',patSz:'auto'},
@@ -271,38 +274,55 @@ if(PREVIEW_MODE){
     sessionStorage.removeItem('fb-synced-uid');
   }catch(e){}
 }
+// 유니크 ID 생성 (같은 밀리초 연속 생성 충돌 방지)
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const sv=(k,v)=>{
   if(PREVIEW_MODE)return; // 미리보기 모드에서는 저장/싱크 안 함
   try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}
   if(window.__scheduleCloudSync)window.__scheduleCloudSync();
 };
 const lv=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}};
-// ── 클라우드 동기화: sv()가 호출될 때마다 1초 디바운스로 Firestore에 전체 백업 ──
+// ── 클라우드 동기화: sv()가 호출될 때마다 300ms 디바운스로 Firestore에 전체 백업 ──
+// beforeunload 시에는 flushCloudSync로 즉시 전송 (페이지 닫기 전에 손실 방지)
 let _cloudSyncTimer=null;
 let _cloudSyncPaused=false;
+function _syncNow(){
+  const FB=window.__FB;
+  if(!FB||!FB.auth||!FB.auth.currentUser)return null;
+  const uid=FB.auth.currentUser.uid;
+  const payload={};
+  BACKUP_KEYS.forEach(k=>{const v=lv(k);if(v!==null&&v!==undefined)payload[k]=v;});
+  payload.__updatedAt=FB.serverTimestamp();
+  payload.__appVersion=APP_VERSION;
+  return FB.setDoc(FB.doc(FB.db,'users',uid),payload,{merge:true}).then(()=>{
+    if(window.__onCloudSynced)window.__onCloudSynced();
+  }).catch(e=>{
+    console.warn('cloud sync failed:',e&&e.code,e&&e.message);
+    if(window.__onCloudSyncError)window.__onCloudSyncError((e&&e.code)||e&&e.message||'failed');
+  });
+}
 function scheduleCloudSync(){
   if(_cloudSyncPaused)return;
   const FB=window.__FB;
   if(!FB||!FB.auth||!FB.auth.currentUser)return;
   clearTimeout(_cloudSyncTimer);
-  _cloudSyncTimer=setTimeout(async()=>{
-    try{
-      const uid=FB.auth.currentUser.uid;
-      const payload={};
-      BACKUP_KEYS.forEach(k=>{const v=lv(k);if(v!==null&&v!==undefined)payload[k]=v;});
-      payload.__updatedAt=FB.serverTimestamp();
-      payload.__appVersion=APP_VERSION;
-      await FB.setDoc(FB.doc(FB.db,'users',uid),payload,{merge:true});
-      if(window.__onCloudSynced)window.__onCloudSynced();
-    }catch(e){console.warn('cloud sync failed:',e&&e.code,e&&e.message);}
-  },1000);
+  _cloudSyncTimer=setTimeout(_syncNow,300);
+}
+function flushCloudSync(){
+  if(_cloudSyncPaused)return;
+  clearTimeout(_cloudSyncTimer);
+  _syncNow();
 }
 window.__scheduleCloudSync=scheduleCloudSync;
+window.__flushCloudSync=flushCloudSync;
 window.__setCloudSyncPaused=v=>{_cloudSyncPaused=v;};
+// 페이지 닫기 직전 pending sync flush (best-effort)
+window.addEventListener('beforeunload',()=>{try{flushCloudSync();}catch(e){}});
+window.addEventListener('pagehide',()=>{try{flushCloudSync();}catch(e){}});
 
 // ★ 백업/복원 유틸
 // 앱에서 사용하는 모든 localStorage 키 목록
-const BACKUP_KEYS=['hj9-sal','hj9-salOv','hj9-tx','hj9-wg','hj9-theme','hj9-adj','hj9-fxov','hj9-appname','hj9-cats','hj9-incCats','hj9-fxCats','hj9-simdata','hj9-ivov','hj9-fx','hj9-fxin','hj9-fxinov','hj9-iv','hj9-ivCats','hj9-lastnoti','hj9-lastBackup','hj9-creditDay','hj9-cutoffDay','hj9-lastAssetCheck'];
+const BACKUP_KEYS=['hj9-sal','hj9-salOv','hj9-tx','hj9-wg','hj9-theme','hj9-adj','hj9-adjMK','hj9-fxov','hj9-appname','hj9-cats','hj9-incCats','hj9-fxCats','hj9-simdata','hj9-ivov','hj9-fx','hj9-fxin','hj9-fxinov','hj9-iv','hj9-ivCats','hj9-lastnoti','hj9-lastBackup','hj9-creditDay','hj9-cutoffDay','hj9-lastAssetCheck'];
 const APP_VERSION='1.0.0';
 function exportBackup(){
   const data={version:APP_VERSION,exportedAt:new Date().toISOString(),keys:{}};
@@ -353,11 +373,14 @@ function NumInp({label,val,onChange,unit,th}){
 
 // ★ 모든 금액 input을 위한 공용 컴포넌트: 1000단위 쉼표 자동 적용
 function MoneyInput({value,onChange,style,placeholder,...rest}){
+  // 값이 0이면 빈 칸으로 보이게 하고 placeholder로 0 표시 — 사용자가 클릭해서 바로 숫자 입력 가능
+  const display=(Number(value)===0)?'':fmtNum(value);
   return(
-    <input type="text" inputMode="numeric" 
-      value={fmtNum(value)} 
-      placeholder={placeholder}
+    <input type="text" inputMode="numeric"
+      value={display}
+      placeholder={placeholder||'0'}
       onChange={e=>onChange(parseNum(e.target.value))}
+      onFocus={e=>e.target.select()}
       style={style} {...rest}/>
   );
 }
@@ -368,7 +391,7 @@ function LoginGate({onLogin,busy}){
     <div style={{minHeight:'100vh',background:'linear-gradient(135deg,#7c3aed,#a78bfa)',display:'flex',alignItems:'center',justifyContent:'center',padding:20,fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif'}}>
       <div style={{background:'#fff',borderRadius:24,padding:'36px 28px 28px',maxWidth:360,width:'100%',boxShadow:'0 20px 60px rgba(0,0,0,0.25)',textAlign:'center'}}>
         <div style={{fontSize:56,marginBottom:10}}>🏠</div>
-        <div style={{fontSize:22,fontWeight:800,color:'#374151',marginBottom:6,letterSpacing:-0.5}}>내집마련</div>
+        <div style={{fontSize:22,fontWeight:800,color:'#374151',marginBottom:6,letterSpacing:-0.5}}>티끌 모아 태산 🐿️💰</div>
         <div style={{fontSize:12,color:'#9ca3af',marginBottom:28,lineHeight:1.6}}>
           매달 돈 흐름을 똑똑하게 관리하는<br/>개인 가계부
         </div>
@@ -403,8 +426,9 @@ function App(){
   const[iv,setIv]=useState(IV0);
   const[txns,setTxns]=useState([]);
   const[wg,setWg]=useState({target:0,year:null,month:null,name:''});
-  const[theme,setTheme]=useState('lavender');
+  const[theme,setTheme]=useState('pastel');
   const[initAdj,setInitAdj]=useState(0);
+  const[initAdjMK,setInitAdjMK]=useState(''); // 잔액설정을 적용한 사이클 월키 (다른 사이클이면 자동 초기화)
   const[fxOv,setFxOv]=useState({});
   const[cats,setCats]=useState(CATS_I);
   const[incCats,setIncCats]=useState(INC_I);
@@ -422,25 +446,23 @@ function App(){
   const[lastAssetCheck,setLastAssetCheck]=useState(null); // 마지막 자산 확인 날짜 (YYYY-MM-DD)
   // ── Firebase auth & sync state ──
   const[fbUser,setFbUser]=useState(null);
+  const[fbAuthReady,setFbAuthReady]=useState(()=>PREVIEW_MODE); // Firebase 인증 해결 완료 여부 (깜박임 방지)
   const[fbBusy,setFbBusy]=useState(false); // 로딩 인디케이터
   const[fbSyncedAt,setFbSyncedAt]=useState(null); // 최근 싱크 시각
+  const[fbSyncError,setFbSyncError]=useState(null); // 최근 싱크 실패 이유
 
-  useEffect(()=>{
+  // ── localStorage → React 상태 동기화 (초기 로드 + 클라우드 다운로드 후 재사용) ──
+  const applyStatesFromStorage=React.useCallback(()=>{
     [['hj9-sal',setSal],['hj9-salOv',setSalOv],['hj9-tx',setTxns],['hj9-wg',setWg],
-     ['hj9-theme',setTheme],['hj9-adj',setInitAdj],['hj9-fxov',setFxOv],
+     ['hj9-theme',setTheme],['hj9-adj',setInitAdj],['hj9-adjMK',setInitAdjMK],['hj9-fxov',setFxOv],
      ['hj9-appname',setAppName],['hj9-fxCats',setFxCats],['hj9-simdata',setSimData],['hj9-creditDay',setCreditDay],['hj9-cutoffDay',setCutoffDay],['hj9-lastAssetCheck',setLastAssetCheck]
-    ].forEach(([k,fn])=>{const v=lv(k);if(v)fn(v);});
+    ].forEach(([k,fn])=>{const v=lv(k);if(v!==null&&v!==undefined)fn(v);});
     const sivo=lv('hj9-ivov');if(sivo)setIvOv(sivo);
-    // 투자 카테고리 로딩 (없으면 기본값). 이전 버전 마이그레이션: 
-    // - isParking/isJar 플래그 없으면 이름이 '파킹'이면 isParking=true, '저금통'이면 isJar=true
-    // - 각 플래그는 배타적(한 카테고리만)이 되도록 중복 시 첫 번째만 유지
     const sic=lv('hj9-ivCats');
     let loadedIvCats=sic&&Array.isArray(sic)&&sic.length?sic:IV_CATS_I;
     let parkSeen=false,jarSeen=false,wedSeen=false;
     loadedIvCats=loadedIvCats.map(c=>{
-      let isParking=c.isParking;
-      let isJar=c.isJar;
-      let isWedding=c.isWedding;
+      let isParking=c.isParking;let isJar=c.isJar;let isWedding=c.isWedding;
       if(isParking===undefined)isParking=(c.name==='파킹');
       if(isJar===undefined)isJar=(c.name==='저금통');
       if(isWedding===undefined)isWedding=(c.name==='결혼자금');
@@ -450,7 +472,6 @@ function App(){
       return{...c,isParking,isJar,isWedding};
     });
     setIvCats(loadedIvCats);
-    // 지출/수입 카테고리 role 마이그레이션: 이름이 '파킹통장'/'저금통'인데 role 없으면 채워줌
     const scats=lv('hj9-cats');
     if(scats&&Array.isArray(scats)){
       const migrated=scats.map(c=>{
@@ -472,7 +493,6 @@ function App(){
       setIncCats(migrated);
     }
     const sfx=lv('hj9-fx');if(sfx)setFx(sfx.map(f=>({...f,df:f.df||f.deletedFrom||null})));
-    // ── 고정수입 마이그레이션: 기존 sal/salOv → fxIn/fxInOv ──
     const sfxin=lv('hj9-fxin');
     let loadedFxIn=[];
     if(sfxin&&Array.isArray(sfxin)&&sfxin.length){
@@ -482,12 +502,10 @@ function App(){
         if(firstActive)firstActive.primary=true;
       }
     }else{
-      // 첫 실행: sal 값이 있으면 주 수입으로 시드
       const oldSal=lv('hj9-sal')||1000000;
-      const seedId=Date.now();
+      const seedId=uid();
       loadedFxIn=[{id:seedId,name:'월급',amount:oldSal,day:21,df:null,primary:true}];
       sv('hj9-fxin',loadedFxIn);
-      // salOv → fxInOv 이관 (seed id 기준)
       const oldSalOv=lv('hj9-salOv');
       if(oldSalOv&&typeof oldSalOv==='object'&&Object.keys(oldSalOv).length){
         const seed={};
@@ -497,9 +515,8 @@ function App(){
     }
     setFxIn(loadedFxIn);
     const sfxinov=lv('hj9-fxinov');if(sfxinov&&typeof sfxinov==='object')setFxInOv(sfxinov);
-    const si=lv('hj9-iv');if(si){
-      // 기존 IV 항목에 ic/cat/payDay 기본값 채워넣기 (마이그레이션)
-      // 기존 cat이 한글 이름(예: '결혼자금')이면 그대로 두되, 해당 이름 카테고리가 없으면 '기타'로
+    const si=lv('hj9-iv');
+    if(si){
       const merged={...IV0};
       const catNames=new Set(loadedIvCats.map(c=>c.name));
       Object.keys(si).forEach(k=>{
@@ -509,9 +526,16 @@ function App(){
         merged[k]={...d,...si[k],ic:si[k].ic||d.ic||'💰',cat:c,payDay:si[k].payDay===undefined?(d.payDay??null):si[k].payDay};
       });
       setIv(merged);
+    }else{
+      setIv({...IV0});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
+  useEffect(()=>{
+    window.__applyStatesFromStorage=applyStatesFromStorage;
+    applyStatesFromStorage();
     if([10,20,30].includes(TDN)){const ln=lv('hj9-lastnoti');if(!ln||ln!==TODAY){setNoti('📊 오늘은 투자 내역 업데이트 날이에요! 자산 탭에서 잔고를 업데이트해 주세요 💜');sv('hj9-lastnoti',TODAY);}}
-    // 공휴일 API 호출: 현재 연도 ± 주변 연도 (목표 연도까지)
     (async()=>{
       const cy=new Date().getFullYear();
       const wgY=(lv('hj9-wg')||{}).year||(new Date().getFullYear()+3);
@@ -521,24 +545,39 @@ function App(){
       setHolTick(t=>t+1);
     })();
     setRdy(true);
-  },[]);
+  },[applyStatesFromStorage]);
 
-  // ── 비변동 자산 자동 증가: rdy=true 된 후 1회 실행 ──
+  // ── 자산 자동 증가 ref (useEffect는 primaryDay 계산 후로 이동) ──
+  const ivRef=React.useRef(iv);
+  useEffect(()=>{ivRef.current=iv;},[iv]);
+
+  // ── 모달 열릴 때 body 스크롤 잠금 (모바일에서 입력 시 외부 스크롤 튀는 현상 방지) ──
   useEffect(()=>{
-    if(!rdy)return;
-    const grown=applyIvAutoGrow(iv,new Date(),primaryDay);
-    if(grown!==iv){setIv(grown);sv('hj9-iv',grown);}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[rdy]);
+    if(!modal)return;
+    const sy=window.scrollY;
+    const prev={position:document.body.style.position,top:document.body.style.top,left:document.body.style.left,right:document.body.style.right,width:document.body.style.width,overflow:document.body.style.overflow};
+    document.body.style.position='fixed';
+    document.body.style.top=`-${sy}px`;
+    document.body.style.left='0';
+    document.body.style.right='0';
+    document.body.style.width='100%';
+    document.body.style.overflow='hidden';
+    return()=>{
+      Object.assign(document.body.style,prev);
+      window.scrollTo(0,sy);
+    };
+  },[modal]);
 
   // ── Firebase 로그인/싱크 훅 ────────────────────────────────
   useEffect(()=>{
     let unsubAuth=null;
     const setup=()=>{
       const FB=window.__FB;if(!FB)return false;
-      window.__onCloudSynced=()=>setFbSyncedAt(new Date());
+      window.__onCloudSynced=()=>{setFbSyncedAt(new Date());setFbSyncError(null);};
+      window.__onCloudSyncError=msg=>setFbSyncError(msg||'알 수 없는 오류');
       unsubAuth=FB.onAuthStateChanged(FB.auth,async user=>{
         setFbUser(user);
+        setFbAuthReady(true); // 첫 해결 — 이후부터 gate/app 판단
         if(!user){
           // 로그아웃 시 세션 마커 제거 — 다음 로그인 때 다시 싱크하도록
           try{sessionStorage.removeItem('fb-synced-uid');}catch(e){}
@@ -557,7 +596,7 @@ function App(){
             const cd=snap.data()||{};
             const cloudKeys=Object.keys(cd).filter(k=>k.startsWith('hj9-'));
             if(cloudKeys.length>0){
-              // ☁️ 클라우드 우선: 로컬 덮어쓰고 리로드 (세션당 1회만)
+              // ☁️ 클라우드 우선: localStorage 덮어쓴 뒤 React 상태 재동기화 (reload 없이 → 깜박임 제거)
               window.__setCloudSyncPaused(true);
               BACKUP_KEYS.forEach(k=>{
                 if(k in cd)localStorage.setItem(k,JSON.stringify(cd[k]));
@@ -565,7 +604,7 @@ function App(){
               });
               window.__setCloudSyncPaused(false);
               try{sessionStorage.setItem('fb-synced-uid',user.uid);}catch(e){}
-              window.location.reload();
+              if(window.__applyStatesFromStorage)window.__applyStatesFromStorage();
               return;
             }else if(localHas){
               scheduleCloudSync();
@@ -623,7 +662,7 @@ function App(){
   };
   const uFxInOv=us('hj9-fxinov',setFxInOv);
   const uIv=v=>{setIv(v);sv('hj9-iv',v);};
-  const uWg=us('hj9-wg',setWg),uAdj=us('hj9-adj',setInitAdj),uTheme=us('hj9-theme',setTheme);
+  const uWg=us('hj9-wg',setWg),uTheme=us('hj9-theme',setTheme);
   const uFxOv=us('hj9-fxov',setFxOv),uCats=us('hj9-cats',setCats),uIncCats=us('hj9-incCats',setIncCats);
   const uFxCats=us('hj9-fxCats',setFxCats),uSimData=us('hj9-simdata',setSimData);
   const uIvOv=us('hj9-ivov',setIvOv);
@@ -657,13 +696,39 @@ function App(){
   const updateTx=t=>{const old=txns.find(x=>x.id===t.id);let ni=iv;if(old)ni=applyAcct(old,-1,ni,cats,incCats,ivCats);ni=applyAcct(t,1,ni,cats,incCats,ivCats);const n=txns.map(x=>x.id===t.id?t:x);setTxns(n);sv('hj9-tx',n);uIv(ni);};
   const getIcon=name=>[...cats,...incCats].find(c=>c.name===name)?.icon||'📦';
 
-  const th=THEMES[theme]||THEMES.lavender;
+  // 옛 테마 ID → 가까운 새 테마로 매핑 (구 버전 사용자의 기존 선택 보존)
+  const THEME_ALIASES={lavender:'sunset',rose:'retro',peach:'warm',sage:'vintage',sky:'cold',aqua:'sea',blossom:'retro',butter:'warm',lilac:'sunset',dark:'night'};
+  const resolvedThemeId=THEMES[theme]?theme:(THEME_ALIASES[theme]||Object.keys(THEMES)[0]);
+  const th=THEMES[resolvedThemeId];
   // 주 수입(primary) 기준 사이클 계산. primary가 없거나 비어있으면 기본 21일.
   const activeFxIn=(fxIn||[]).filter(f=>!f.df);
   const primaryFxIn=activeFxIn.find(f=>f.primary)||activeFxIn[0];
   const primaryDay=primaryFxIn?.day||21;
+  // ── 자산 자동 증가: 초기 로딩 + 앱 포커스 복귀 시마다 재실행 (primaryDay 계산 후 선언) ──
+  useEffect(()=>{
+    if(!rdy)return;
+    const doGrow=()=>{
+      const cur=ivRef.current;
+      const grown=applyIvAutoGrow(cur,new Date(),primaryDay);
+      if(grown!==cur){setIv(grown);sv('hj9-iv',grown);}
+    };
+    doGrow();
+    const onVis=()=>{if(document.visibilityState==='visible')doGrow();};
+    document.addEventListener('visibilitychange',onVis);
+    window.addEventListener('focus',onVis);
+    return()=>{document.removeEventListener('visibilitychange',onVis);window.removeEventListener('focus',onVis);};
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[rdy,primaryDay]);
   const pr=getCurCycle(primaryDay);
   const salMK=dkey(pr.start).slice(0,7);
+  // ── 잔액설정(initAdj): 설정한 사이클 월에만 적용, 다른 사이클이면 자동 0 처리 ──
+  const effInitAdj=(initAdjMK===salMK)?initAdj:0;
+  const uAdj=v=>{
+    const mk=salMK;
+    const amt=Math.max(0,Number(v)||0);
+    setInitAdj(amt);sv('hj9-adj',amt);
+    setInitAdjMK(amt>0?mk:'');sv('hj9-adjMK',amt>0?mk:'');
+  };
   // 고정수입 합계(월별 override 반영). salOv/sal 기반에서 fxIn/fxInOv 기반으로 전환.
   const getInAmt=(f,mk)=>{const ov=fxInOv[mk]?.[f.id];return(ov!==undefined&&ov!==null)?Number(ov):Number(f.amount||0);};
   const curIn=activeFxIn.reduce((s,f)=>s+getInAmt(f,salMK),0);
@@ -707,8 +772,8 @@ function App(){
   const creditUpcomingBillDt=(()=>{const c=cp.nextCutoff;const y=c.getFullYear(),m=c.getMonth()+1;if(c.getDate()<creditDay){return new Date(y,m-1,billingClamp(y,m,creditDay));}else{const ny=m===12?y+1:y,nm=m===12?1:m+1;return new Date(ny,nm-1,billingClamp(ny,nm,creditDay));}})();
   const creditLockedBillLabel=`${creditLockedBillDt.getMonth()+1}월 ${creditLockedBillDt.getDate()}일`;
   const creditUpcomingBillLabel=`${creditUpcomingBillDt.getMonth()+1}월 ${creditUpcomingBillDt.getDate()}일`;
-  const avail=baseA-initAdj-spnt+incd;
-  const spPct=Math.min(100,baseA>0?((initAdj+spnt-incd)/baseA)*100:0);
+  const avail=baseA-effInitAdj-spnt+incd;
+  const spPct=Math.min(100,baseA>0?((effInitAdj+spnt-incd)/baseA)*100:0);
   // 목표 자금 합계: isWedding 카테고리의 모든 투자 current 합
   const wFund=wedKeys.reduce((s,k)=>s+(iv[k]?.current||0),0);
   // 총자산: 모든 iv current 합
@@ -723,12 +788,12 @@ function App(){
   const billingDt=nextBillingDate(creditDay);
   const billingLabel=`${billingDt.getMonth()+1}월 ${creditDay}일`;
 
-  if(!rdy)return(<div style={{display:'flex',height:'100vh',alignItems:'center',justifyContent:'center',background:'#faf5ff',flexDirection:'column',gap:12}}><div style={{fontSize:60}}>🌸</div><div style={{color:'#7c3aed',fontSize:15,fontWeight:700}}>불러오는 중...</div></div>);
+  if(!rdy||(!PREVIEW_MODE&&!fbAuthReady))return(<div style={{display:'flex',height:'100vh',alignItems:'center',justifyContent:'center',background:'#faf5ff',flexDirection:'column',gap:12}}><div style={{fontSize:60}}>🌸</div><div style={{color:'#7c3aed',fontSize:15,fontWeight:700}}>불러오는 중...</div></div>);
 
-  // ── 로그인 게이트: 미로그인 상태에서는 앱 진입 차단 (미리보기 모드는 우회) ──
+  // ── 로그인 게이트: Firebase 인증 해결 완료 + 로그인 안 돼 있을 때만 ──
   if(!PREVIEW_MODE&&!fbUser)return(<LoginGate onLogin={handleLogin} busy={fbBusy}/>);
 
-  const ctx={appName,uAppName,sal,curSal,curIn,salOv,salMK,primaryDay,uSal,uSalOv,fx,fxIn,uFxIn,fxInOv,uFxInOv,iv,txns,pr,pTx,fxSum,ivDed,baseA,avail,spnt,incd,spPct,creditPending,billingLabel,wFund,tAss,wg,wgUnset,dLeft,dayB,needMo,saveGap,mLeft,uFx,uIv,uIvOv,ivOv,uWg,uAdj,addTx,delTx,updateTx,initAdj,fxOv,uFxOv,cats,incCats,uCats,uIncCats,fxCats,uFxCats,simData,uSimData,getIcon,modal,setModal,th,theme,uTheme,wedKeys,ivCats,uIvCats,wedCatName,setTab,bkTick,setBkTick,creditDay,uCreditDay,cutoffDay,uCutoffDay,lastAssetCheck,uLastAssetCheck,creditLocked,creditUpcoming,creditLockedBillLabel,creditUpcomingBillLabel};
+  const ctx={appName,uAppName,sal,curSal,curIn,salOv,salMK,primaryDay,uSal,uSalOv,fx,fxIn,uFxIn,fxInOv,uFxInOv,iv,txns,pr,pTx,fxSum,ivDed,baseA,avail,spnt,incd,spPct,creditPending,billingLabel,wFund,tAss,wg,wgUnset,dLeft,dayB,needMo,saveGap,mLeft,uFx,uIv,uIvOv,ivOv,uWg,uAdj,addTx,delTx,updateTx,initAdj:effInitAdj,fxOv,uFxOv,cats,incCats,uCats,uIncCats,fxCats,uFxCats,simData,uSimData,getIcon,modal,setModal,th,theme,uTheme,wedKeys,ivCats,uIvCats,wedCatName,setTab,bkTick,setBkTick,creditDay,uCreditDay,cutoffDay,uCutoffDay,lastAssetCheck,uLastAssetCheck,creditLocked,creditUpcoming,creditLockedBillLabel,creditUpcomingBillLabel};
   const TABS=[['🏠','홈'],['📅','가계부'],['📌','고정'],['📈','자산'],['⚙️','설정']];
 
   return(
@@ -748,6 +813,12 @@ function App(){
             <div style={{fontSize:11,opacity:.75,marginTop:2}}>{pr.label} · {pr.range}</div>
           </div>
           <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            {fbUser&&(() => {
+              const recent=fbSyncedAt&&(Date.now()-fbSyncedAt.getTime()<5000);
+              const icon=fbSyncError?'⚠️':recent?'✓':'☁️';
+              const tip=fbSyncError?`싱크 실패: ${fbSyncError}`:recent?'방금 싱크됨':fbSyncedAt?`${Math.floor((Date.now()-fbSyncedAt.getTime())/1000)}초 전 싱크됨`:'클라우드 대기 중';
+              return(<span title={tip} style={{fontSize:11,opacity:.85,padding:'2px 4px',cursor:'help'}}>{icon}</span>);
+            })()}
             {fbUser?(
               <button onClick={handleLogout} title={fbUser.email||''} disabled={fbBusy} style={{background:'rgba(255,255,255,.2)',border:'none',color:'#fff',borderRadius:20,padding:'3px 10px 3px 4px',fontSize:11,cursor:fbBusy?'wait':'pointer',fontWeight:600,display:'flex',alignItems:'center',gap:5,opacity:fbBusy?.7:1}}>
                 {fbUser.photoURL?(<img src={fbUser.photoURL} alt="" style={{width:20,height:20,borderRadius:10,display:'block'}} referrerPolicy="no-referrer"/>):(<span style={{width:20,height:20,borderRadius:10,background:'rgba(255,255,255,.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11}}>{(fbUser.displayName||fbUser.email||'?').charAt(0).toUpperCase()}</span>)}
@@ -766,7 +837,13 @@ function App(){
         {tab===3&&<AssetsTab {...ctx}/>}{tab===4&&<SettingsTab {...ctx}/>}
       </div>
       <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:480,background:th.card,borderTop:`1px solid ${th.border}`,display:'flex',paddingTop:6,paddingBottom:`calc(8px + var(--sab))`,zIndex:100}}>
-        {TABS.map(([ic,lb],i)=>(<button key={i} onClick={()=>setTab(i)} style={{flex:1,border:'none',background:'none',cursor:'pointer',padding:'2px 0',color:tab===i?th.primary:th.sub}}><div style={{fontSize:18}}>{ic}</div><div style={{fontSize:8,fontWeight:tab===i?700:500,marginTop:2}}>{lb}</div></button>))}
+        {TABS.map(([ic,lb],i)=>(
+          <button key={i} onClick={()=>setTab(i)} style={{flex:1,border:'none',background:tab===i?`${th.primary}14`:'none',cursor:'pointer',padding:'2px 0',color:tab===i?th.primary:th.sub,position:'relative',transition:'background .15s'}}>
+            {tab===i&&<div style={{position:'absolute',top:3,left:'50%',transform:'translateX(-50%)',width:4,height:4,borderRadius:2,background:th.primary}}/>}
+            <div style={{fontSize:18,marginTop:tab===i?4:0}}>{ic}</div>
+            <div style={{fontSize:8,fontWeight:tab===i?700:500,marginTop:2}}>{lb}</div>
+          </button>
+        ))}
       </div>
       {modal&&<Modals {...ctx}/>}
     </div>
@@ -810,7 +887,13 @@ function HomeTab({curSal,fxSum,ivDed,baseA,avail,spnt,incd,spPct,creditPending,b
     <div style={{background:th.grad,borderRadius:20,padding:'20px 18px',color:'#fff',marginBottom:10,boxShadow:'0 4px 20px rgba(0,0,0,.2)'}}>
       <div style={{fontSize:12,opacity:.85,fontWeight:500}}>🟢 이번 달 사용 가능 금액</div>
       <div style={{fontSize:34,fontWeight:800,marginTop:6,letterSpacing:-1,color:avail<0?'#fca5a5':'#fff'}}>{avail<0?'-':''}{won(avail)}</div>
-      <div style={{fontSize:10,opacity:.7,marginTop:3}}>수입 {won(curSal)} - 고정 {won(fxSum)} - 투자 {won(ivDed)}{spnt>0?` - 지출 ${won(spnt)}`:''}{incd>0?` + 수입 ${won(incd)}`:''}</div>
+      <div style={{fontSize:10,opacity:.8,marginTop:6,display:'flex',flexWrap:'wrap',gap:'3px 10px',lineHeight:1.6}}>
+        <span>💵 수입 <b>{won(curSal)}</b></span>
+        <span>📌 고정 <b>-{won(fxSum)}</b></span>
+        <span>📈 투자 <b>-{won(ivDed)}</b></span>
+        {spnt>0&&<span>💸 지출 <b>-{won(spnt)}</b></span>}
+        {incd>0&&<span>➕ 추가수입 <b>+{won(incd)}</b></span>}
+      </div>
       <div style={{background:'rgba(255,255,255,.25)',borderRadius:999,height:6,marginTop:14,overflow:'hidden'}}><div style={{background:'#fff',height:'100%',width:`${spPct}%`,borderRadius:999}}/></div>
       <div style={{display:'flex',justifyContent:'space-between',fontSize:10,opacity:.75,marginTop:4}}><span>사용률 {spPct.toFixed(0)}%</span><span>잔여 {dLeft}일 · 일 {won(dayB)}</span></div>
     </div>
@@ -909,7 +992,7 @@ function TxRow({t,onEdit,getIcon,th}){
     </div>
     <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
       <span style={{fontSize:13,fontWeight:700,color:t.tp==='exp'?'#dc2626':th.green}}>{t.tp==='exp'?'-':'+'}{won(t.amt)}</span>
-      {onEdit&&<button onClick={()=>onEdit(t)} style={{border:'none',background:th.border,borderRadius:8,padding:'3px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button>}
+      {onEdit&&<button onClick={()=>onEdit(t)} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button>}
     </div>
   </div>);
 }
@@ -1098,10 +1181,10 @@ function LedgerTab({txns,delTx,updateTx,setModal,th,fx,fxOv,curSal,salOv,salMK,u
         <button onClick={()=>setModal({type:'txn',data:{date:sel}})} style={{background:th.primary,color:'#fff',border:'none',borderRadius:20,padding:'4px 12px',fontSize:11,cursor:'pointer',fontWeight:700}}>+ 추가</button>
       </div>
       <div style={{display:'flex',gap:6,marginBottom:10}}>{[['all','전체'],['exp','💸 지출'],['inc','💰 수입']].map(([v,lb])=>(<button key={v} onClick={()=>setTxFilter(v)} style={{border:'none',borderRadius:20,padding:'4px 12px',fontSize:10,cursor:'pointer',fontWeight:600,background:txFilter===v?th.primary:th.border,color:txFilter===v?'#fff':th.sub}}>{lb}</button>))}</div>
-      {showSal&&selFxIn.map(f=>{const effAmt=getInAmt(f);const isOv=(fxInOv||{})[cycSalMK]?.[f.id]!==undefined;return(<div key={f.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:`${th.green}22`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>💰</div><div style={{flex:1}}><div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}><span style={{fontSize:12,fontWeight:600,color:th.text}}>{f.name}</span>{f.primary&&<span style={{fontSize:9,color:th.primary,background:th.border,borderRadius:6,padding:'1px 5px',fontWeight:600}}>주 수입</span>}{isOv&&<span style={{fontSize:9,color:'#ea580c',background:'#fff7ed',borderRadius:6,padding:'1px 5px',fontWeight:600}}>수정됨</span>}</div><div style={{fontSize:10,color:th.sub}}>매월 {f.day}일 입금 / 기본 {won(f.amount)}</div></div><span style={{fontSize:13,fontWeight:700,color:th.green}}>+{won(effAmt)}</span><button onClick={()=>setModal({type:'fxInOv',fxInId:f.id,fxInName:f.name,defaultAmt:f.amount,monthKey:cycSalMK})} style={{border:'none',background:th.border,borderRadius:8,padding:'3px 7px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button></div>);})}
-      {showInv&&selInvItems.map(inv=>(<div key={inv.ivKey} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:`${th.primary}22`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{inv.icon}</div><div style={{flex:1}}><div style={{display:'flex',alignItems:'center',gap:5}}><span style={{fontSize:12,fontWeight:600,color:th.text}}>{inv.name}</span><span style={{fontSize:9,color:th.primary,background:th.border,borderRadius:6,padding:'1px 5px',fontWeight:600}}>투자</span>{ivOv[cycSalMK]?.[inv.ivKey]!==undefined&&<span style={{fontSize:9,color:'#ea580c',background:'#fff7ed',borderRadius:6,padding:'1px 5px',fontWeight:600}}>수정됨</span>}</div><div style={{fontSize:10,color:th.sub}}>{inv.payDay==null?'월급일 자동 출금':`매월 ${inv.payDay}일 자동 출금`}</div></div><div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}><span style={{fontSize:13,fontWeight:700,color:'#dc2626'}}>-{won(inv.amount)}</span><button onClick={()=>setModal({type:'ivOv',ivKey:inv.ivKey,ivName:inv.name,monthKey:cycSalMK,defaultAmt:inv.def})} style={{border:'none',background:th.border,borderRadius:8,padding:'3px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button></div></div>))}
+      {showSal&&selFxIn.map(f=>{const effAmt=getInAmt(f);const isOv=(fxInOv||{})[cycSalMK]?.[f.id]!==undefined;return(<div key={f.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:`${th.green}22`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>💰</div><div style={{flex:1}}><div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}><span style={{fontSize:12,fontWeight:600,color:th.text}}>{f.name}</span>{f.primary&&<span style={{fontSize:9,color:th.primary,background:th.border,borderRadius:6,padding:'1px 5px',fontWeight:600}}>주 수입</span>}{isOv&&<span style={{fontSize:9,color:'#ea580c',background:'#fff7ed',borderRadius:6,padding:'1px 5px',fontWeight:600}}>수정됨</span>}</div><div style={{fontSize:10,color:th.sub}}>매월 {f.day}일 입금 / 기본 {won(f.amount)}</div></div><span style={{fontSize:13,fontWeight:700,color:th.green}}>+{won(effAmt)}</span><button onClick={()=>setModal({type:'fxInOv',fxInId:f.id,fxInName:f.name,defaultAmt:f.amount,monthKey:cycSalMK})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button></div>);})}
+      {showInv&&selInvItems.map(inv=>(<div key={inv.ivKey} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:`${th.primary}22`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{inv.icon}</div><div style={{flex:1}}><div style={{display:'flex',alignItems:'center',gap:5}}><span style={{fontSize:12,fontWeight:600,color:th.text}}>{inv.name}</span><span style={{fontSize:9,color:th.primary,background:th.border,borderRadius:6,padding:'1px 5px',fontWeight:600}}>투자</span>{ivOv[cycSalMK]?.[inv.ivKey]!==undefined&&<span style={{fontSize:9,color:'#ea580c',background:'#fff7ed',borderRadius:6,padding:'1px 5px',fontWeight:600}}>수정됨</span>}</div><div style={{fontSize:10,color:th.sub}}>{inv.payDay==null?'월급일 자동 출금':`매월 ${inv.payDay}일 자동 출금`}</div></div><div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}><span style={{fontSize:13,fontWeight:700,color:'#dc2626'}}>-{won(inv.amount)}</span><button onClick={()=>setModal({type:'ivOv',ivKey:inv.ivKey,ivName:inv.name,monthKey:cycSalMK,defaultAmt:inv.def})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button></div></div>))}
       {/* ★ 고정지출 - 통일된 편집 버튼 */}
-      {showFx&&selFx.map(f=>{const effAmt=getFxOvAmt(f,selMp,fxOv),isOv=!!(fxOv[selMp]?.[f.id]);return(<div key={f.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>📌</div><div style={{flex:1}}><div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}><span style={{fontSize:12,fontWeight:600,color:th.text}}>{f.name}</span><span style={{fontSize:9,color:th.primary,background:th.border,borderRadius:6,padding:'1px 5px',fontWeight:600}}>고정</span>{isOv&&<span style={{fontSize:9,color:'#ea580c',background:'#fff7ed',borderRadius:6,padding:'1px 5px',fontWeight:600}}>수정됨</span>}</div><div style={{fontSize:10,color:th.sub}}>기본 {f.day}일 / {won(f.amount)}</div></div><div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}><span style={{fontSize:13,fontWeight:700,color:'#dc2626'}}>-{won(effAmt)}</span><button onClick={()=>setModal({type:'fxmonth',fxId:f.id,fxName:f.name,fxDefaultDay:f.day,fxDefaultAmt:f.amount,monthKey:selMp})} style={{border:'none',background:th.border,borderRadius:8,padding:'3px 7px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button></div></div>);})}
+      {showFx&&selFx.map(f=>{const effAmt=getFxOvAmt(f,selMp,fxOv),isOv=!!(fxOv[selMp]?.[f.id]);return(<div key={f.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{width:36,height:36,borderRadius:12,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>📌</div><div style={{flex:1}}><div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}><span style={{fontSize:12,fontWeight:600,color:th.text}}>{f.name}</span><span style={{fontSize:9,color:th.primary,background:th.border,borderRadius:6,padding:'1px 5px',fontWeight:600}}>고정</span>{isOv&&<span style={{fontSize:9,color:'#ea580c',background:'#fff7ed',borderRadius:6,padding:'1px 5px',fontWeight:600}}>수정됨</span>}</div><div style={{fontSize:10,color:th.sub}}>기본 {f.day}일 / {won(f.amount)}</div></div><div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}><span style={{fontSize:13,fontWeight:700,color:'#dc2626'}}>-{won(effAmt)}</span><button onClick={()=>setModal({type:'fxmonth',fxId:f.id,fxName:f.name,fxDefaultDay:f.day,fxDefaultAmt:f.amount,monthKey:selMp})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button></div></div>);})}
       {filteredTx.map(t=><TxRow key={t.id} t={t} onEdit={t=>setModal({type:'txn',editTx:t})} getIcon={getIcon} th={th}/>)}
       {!hasAny&&<div style={{color:th.sub,fontSize:12,textAlign:'center',padding:'20px 0'}}>내역 없음 · 추가해 보세요 🌟</div>}
       {hasAny&&(<div style={{borderTop:`1px solid ${th.border}`,paddingTop:8,marginTop:4,display:'flex',justifyContent:'space-between',fontSize:11,fontWeight:700}}><span style={{color:'#dc2626'}}>지출 -{won(selTxExp+selFxTotal+(showFx?selInvTotal:0))}</span><span style={{color:th.green}}>수입 +{won(selTxInc+(showSal?selFxInTotal:0))}</span></div>)}
@@ -1155,15 +1238,12 @@ function FixedTab({fx,fxSum,uFx,fxIn,uFxIn,setModal,fxCats,th}){
     </div>
 
     <div style={{...Cd(th),padding:0,overflow:'hidden'}}>
-      <button onClick={()=>setOpenInc(o=>!o)} style={{width:'100%',background:`linear-gradient(135deg,${th.green},#34d399)`,border:'none',padding:'14px 16px',color:'#fff',textAlign:'left',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div>
-          <div style={{fontSize:12,fontWeight:800}}>💵 고정 수입</div>
-          <div style={{fontSize:10,opacity:.85,marginTop:2}}>{activeIn.length}개 · {won(incSum)}</div>
-        </div>
-        <div style={{fontSize:20,fontWeight:700,transition:'transform 0.2s',transform:openInc?'rotate(180deg)':'rotate(0deg)'}}>▾</div>
-      </button>
+      <div style={{width:'100%',background:`linear-gradient(135deg,${th.green},#34d399)`,padding:'9px 14px',color:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+        <div onClick={()=>setOpenInc(o=>!o)} style={{flex:1,cursor:'pointer',fontSize:12,fontWeight:800}}>💵 고정 수입</div>
+        <button onClick={()=>setModal({type:'fxIn',data:null})} title="고정 수입 추가" style={{width:24,height:24,borderRadius:12,background:'rgba(255,255,255,0.25)',border:'none',color:'#fff',cursor:'pointer',fontSize:15,fontWeight:700,lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>+</button>
+        <div onClick={()=>setOpenInc(o=>!o)} style={{fontSize:20,fontWeight:700,transition:'transform 0.2s',transform:openInc?'rotate(180deg)':'rotate(0deg)',cursor:'pointer',flexShrink:0}}>▾</div>
+      </div>
       {openInc&&(<div style={{padding:14,background:th.card}}>
-        <button onClick={()=>setModal({type:'fxIn',data:null})} style={{width:'100%',background:'#dcfce7',border:`2px dashed #86efac`,borderRadius:14,padding:'12px',fontSize:12,color:th.green,cursor:'pointer',fontWeight:700,marginBottom:10}}>+ 새 고정 수입 추가</button>
         {activeIn.length===0?(
           <div style={{fontSize:11,color:th.sub,padding:'16px 0',textAlign:'center'}}>아직 등록된 고정 수입이 없어요.</div>
         ):activeIn.map(f=>(
@@ -1176,7 +1256,7 @@ function FixedTab({fx,fxSum,uFx,fxIn,uFxIn,setModal,fxCats,th}){
               <div style={{fontSize:10,color:th.sub}}>매월 {f.day}일 입금 · {won(f.amount)}{f.primary?' · 사이클 기준일':''}</div>
             </div>
             <div style={{display:'flex',gap:4}}>
-              <button onClick={()=>setModal({type:'fxIn',data:f})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button>
+              <button onClick={()=>setModal({type:'fxIn',data:f})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button>
               <button onClick={()=>delIn(f)} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button>
             </div>
           </div>
@@ -1185,15 +1265,15 @@ function FixedTab({fx,fxSum,uFx,fxIn,uFxIn,setModal,fxCats,th}){
     </div>
 
     <div style={{...Cd(th),padding:0,overflow:'hidden'}}>
-      <button onClick={()=>setOpenExp(o=>!o)} style={{width:'100%',background:th.grad,border:'none',padding:'14px 16px',color:'#fff',textAlign:'left',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div>
-          <div style={{fontSize:12,fontWeight:800}}>📌 고정 지출</div>
-          <div style={{fontSize:10,opacity:.85,marginTop:2}}>{activeFx.length}개 · {won(fxSum)}</div>
-        </div>
-        <div style={{fontSize:20,fontWeight:700,transition:'transform 0.2s',transform:openExp?'rotate(180deg)':'rotate(0deg)'}}>▾</div>
-      </button>
+      <div style={{width:'100%',background:th.grad,padding:'9px 14px',color:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+        <div onClick={()=>setOpenExp(o=>!o)} style={{flex:1,cursor:'pointer',fontSize:12,fontWeight:800}}>📌 고정 지출</div>
+        <button onClick={()=>setModal({type:'fx',data:null})} title="고정 지출 추가" style={{width:24,height:24,borderRadius:12,background:'rgba(255,255,255,0.25)',border:'none',color:'#fff',cursor:'pointer',fontSize:15,fontWeight:700,lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>+</button>
+        <div onClick={()=>setOpenExp(o=>!o)} style={{fontSize:20,fontWeight:700,transition:'transform 0.2s',transform:openExp?'rotate(180deg)':'rotate(0deg)',cursor:'pointer',flexShrink:0}}>▾</div>
+      </div>
       {openExp&&(<div style={{padding:14,background:th.card}}>
-        <button onClick={()=>setModal({type:'fx',data:null})} style={{width:'100%',background:th.border,border:`2px dashed ${th.light}`,borderRadius:14,padding:'12px',fontSize:12,color:th.primary,cursor:'pointer',fontWeight:700,marginBottom:10}}>+ 새 고정 지출 추가</button>
+        {Object.keys(byCat).length===0&&(
+          <div style={{fontSize:11,color:th.sub,padding:'16px 0',textAlign:'center'}}>아직 등록된 고정 지출이 없어요. 상단 <b>+</b> 버튼으로 추가해 보세요.</div>
+        )}
         {Object.entries(byCat).map(([cat,items])=>(
           <div key={cat} style={{background:th.bg,borderRadius:14,padding:12,marginBottom:8,border:`1px solid ${th.border}`}}>
             <div style={{fontSize:11,fontWeight:700,color:th.sub,marginBottom:8}}>{getCatIcon(cat)} {cat}</div>
@@ -1204,7 +1284,7 @@ function FixedTab({fx,fxSum,uFx,fxIn,uFxIn,setModal,fxCats,th}){
                   <div style={{fontSize:10,color:th.sub}}>매월 {f.day}일 · {won(f.amount)}</div>
                 </div>
                 <div style={{display:'flex',gap:4}}>
-                  <button onClick={()=>setModal({type:'fx',data:f})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button>
+                  <button onClick={()=>setModal({type:'fx',data:f})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button>
                   <button onClick={()=>{if(!confirm(`"${f.name}" 고정 지출을 삭제할까요?\n다음 달부터 적용 안 됩니다.`))return;const nxt=getNextMK();uFx(fx.map(x=>x.id===f.id?{...x,df:nxt}:x));}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button>
                 </div>
               </div>
@@ -1245,6 +1325,15 @@ function AssetsTab({iv,wFund,tAss,uIv,setModal,wg,wgUnset,uWg,needMo,mLeft,th,we
     {/* ★ 투자/자산 추가 버튼 */}
     <button onClick={()=>setModal({type:'iv',key:null})} style={{width:'100%',background:th.border,border:`2px dashed ${th.light}`,borderRadius:14,padding:'12px',fontSize:12,color:th.primary,cursor:'pointer',fontWeight:700,marginBottom:10}}>+ 새 투자/자산 항목 추가</button>
 
+    {/* ★ 빈 상태 안내 */}
+    {Object.keys(iv).length===0&&(
+      <div style={{...Cd(th),textAlign:'center',padding:'28px 16px',border:`1.5px dashed ${th.border}`}}>
+        <div style={{fontSize:36,marginBottom:8}}>🪙</div>
+        <div style={{fontSize:13,fontWeight:700,color:th.text,marginBottom:4}}>아직 등록된 자산이 없어요</div>
+        <div style={{fontSize:11,color:th.sub,lineHeight:1.6}}>위 <b>"+ 새 투자/자산 항목 추가"</b> 버튼으로<br/>적금·파킹통장·주식 등을 추가해 보세요.</div>
+      </div>
+    )}
+
     {/* ★ 카테고리별 항목 리스트 */}
     {orderedCats.map(catName=>{
       const catObj=getCatObj(catName);
@@ -1267,8 +1356,8 @@ function AssetsTab({iv,wFund,tAss,uIv,setModal,wg,wgUnset,uWg,needMo,mLeft,th,we
             <div style={{textAlign:'right',flexShrink:0}}>
               <div style={{fontSize:14,fontWeight:800,color:catObj.isWedding?th.primary:isParking?th.green:isJar?'#f472b6':th.primary}}>{won(item.current)}</div>
               <div style={{display:'flex',gap:4,marginTop:2,justifyContent:'flex-end'}}>
-                <button onClick={()=>setModal({type:'iv',key:k})} style={{border:'none',background:th.border,borderRadius:6,padding:'2px 7px',fontSize:9,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button>
-                <button onClick={()=>handleDel(k)} style={{border:'none',background:'#fef2f2',borderRadius:6,padding:'2px 7px',fontSize:9,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button>
+                <button onClick={()=>setModal({type:'iv',key:k})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button>
+                <button onClick={()=>handleDel(k)} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button>
               </div>
             </div>
           </div>
@@ -1278,69 +1367,6 @@ function AssetsTab({iv,wFund,tAss,uIv,setModal,wg,wgUnset,uWg,needMo,mLeft,th,we
   </div>);
 }
 
-
-// ★ 백업/복원 카드 컴포넌트
-function BackupCard({th,onBackupDone}){
-  const[lastBackup,setLastBackup]=useState(lv('hj9-lastBackup'));
-  const[busy,setBusy]=useState(false);
-  const[msg,setMsg]=useState(null);
-  const fileRef=React.useRef(null);
-  const d=daysSince(lastBackup);
-  const handleDownload=()=>{
-    try{
-      setBusy(true);
-      downloadBackup();
-      setLastBackup(lv('hj9-lastBackup'));
-      if(onBackupDone)onBackupDone();
-      setMsg({type:'ok',text:'✅ 백업 파일을 다운로드했어요. 안전한 곳에 보관해 주세요!'});
-    }catch(e){
-      setMsg({type:'err',text:'❌ 다운로드 실패: '+e.message});
-    }finally{setBusy(false);}
-  };
-  const handleFile=e=>{
-    const f=e.target.files?.[0];
-    if(!f)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      try{
-        const data=JSON.parse(ev.target.result);
-        const n=Object.keys(data.keys||{}).length;
-        if(!confirm(`백업 파일을 불러올까요?\n\n📅 백업 시점: ${data.exportedAt?new Date(data.exportedAt).toLocaleString('ko-KR'):'알 수 없음'}\n📦 데이터 항목: ${n}개\n\n⚠️ 지금 앱의 모든 데이터가 이 백업으로 덮어써져요. 불러오기 전에 현재 데이터를 먼저 백업하는 걸 권장해요.`))return;
-        const count=importBackup(data);
-        setMsg({type:'ok',text:`✅ ${count}개 항목을 복원했어요. 앱이 잠시 후 새로고침돼요.`});
-        setTimeout(()=>window.location.reload(),1500);
-      }catch(err){
-        setMsg({type:'err',text:'❌ 복원 실패: '+err.message});
-      }
-    };
-    reader.readAsText(f);
-    e.target.value='';// 같은 파일 재선택 가능하게
-  };
-  return(
-    <div style={{...Cd(th),border:`1.5px solid ${th.border}`}}>
-      <div style={{fontSize:13,fontWeight:700,color:th.text,marginBottom:4}}>💾 데이터 백업 & 복원</div>
-      <div style={{fontSize:10,color:th.sub,lineHeight:1.7,marginBottom:12}}>
-        {d===null?'⚠️ 아직 백업한 적이 없어요. 기기 바꾸거나 브라우저 데이터 지우면 모두 사라져요.'
-         :d===0?'✅ 오늘 백업했어요!'
-         :d<=7?`✅ ${d}일 전 백업함`
-         :d<=30?`⏰ ${d}일 전 백업함 — 업데이트 권장`
-         :`⚠️ ${d}일 전 백업함 — 오래됐어요! 다시 백업해 주세요`}
-      </div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:msg?10:0}}>
-        <button onClick={handleDownload} disabled={busy} style={{background:th.primary,color:'#fff',border:'none',borderRadius:10,padding:'10px',fontSize:12,fontWeight:700,cursor:busy?'wait':'pointer',opacity:busy?.6:1}}>📥 백업 다운로드</button>
-        <button onClick={()=>fileRef.current?.click()} disabled={busy} style={{background:th.border,color:th.primary,border:'none',borderRadius:10,padding:'10px',fontSize:12,fontWeight:700,cursor:busy?'wait':'pointer',opacity:busy?.6:1}}>📤 백업 불러오기</button>
-      </div>
-      <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} style={{display:'none'}}/>
-      {msg&&(
-        <div style={{marginTop:4,padding:'8px 10px',borderRadius:8,fontSize:11,lineHeight:1.5,background:msg.type==='ok'?`${th.green}15`:'#fef2f2',color:msg.type==='ok'?th.green:'#dc2626',border:`1px solid ${msg.type==='ok'?th.green+'33':'#fecaca'}`}}>{msg.text}</div>
-      )}
-      <div style={{fontSize:10,color:th.sub,background:th.border,borderRadius:8,padding:'8px 10px',marginTop:10,lineHeight:1.7}}>
-        💡 <b>기기를 바꿀 때</b>: 기존 기기에서 백업 다운로드 → 새 기기에서 앱 열고 백업 불러오기<br/>
-        💡 <b>정기 백업 권장</b>: 월 1회 이상 다운로드해서 클라우드(구글 드라이브, iCloud 등)에 보관하면 안전해요
-      </div>
-    </div>
-  );
-}
 
 // ── 설정 탭 ────────────────────────────────────────────────────
 function SettingsTab({sal,curSal,salMK,salOv,uSal,uSalOv,cats,incCats,uCats,uIncCats,fxCats,uFxCats,ivCats,uIvCats,simData,uSimData,setModal,wFund,wg,mLeft,ivDed,th,setBkTick,creditDay,uCreditDay,cutoffDay,uCutoffDay}){
@@ -1367,7 +1393,7 @@ function SettingsTab({sal,curSal,salMK,salOv,uSal,uSalOv,cats,incCats,uCats,uInc
   const CatRow=({c,onEdit,onDel})=>(<div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}>
     <span style={{fontSize:22,width:32,textAlign:'center'}}>{c.icon}</span>
     <div style={{flex:1,fontSize:13,fontWeight:600,color:th.text}}>{c.name}</div>
-    <button onClick={()=>onEdit(c)} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button>
+    <button onClick={()=>onEdit(c)} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button>
     <button onClick={()=>{if(confirm(`'${c.name}' 카테고리를 삭제할까요?`))onDel(c.id||c);}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button>
   </div>);
 
@@ -1383,30 +1409,34 @@ function SettingsTab({sal,curSal,salMK,salOv,uSal,uSalOv,cats,incCats,uCats,uInc
         <div style={{flex:1}}>
           <div style={{fontSize:11,color:th.sub,marginBottom:4}}>결제일 (통장 출금)</div>
           <div style={{display:'flex',alignItems:'center',gap:6}}>
-            <input type="number" min="1" max="31" value={creditDay} onChange={e=>{const v=Math.max(1,Math.min(31,Number(e.target.value)||1));uCreditDay(v);}} style={{flex:1,border:`2px solid ${th.border}`,borderRadius:12,padding:'10px 12px',outline:'none',background:th.card,color:th.text,textAlign:'left'}}/>
+            <input className="compact" onFocus={e=>e.target.select()} type="number" min="1" max="31" value={creditDay} onChange={e=>{const v=Math.max(1,Math.min(31,Number(e.target.value)||1));uCreditDay(v);}} style={{flex:1,width:'100%',border:`1.5px solid ${th.border}`,borderRadius:8,padding:'6px 10px',outline:'none',background:th.card,color:th.text,textAlign:'left'}}/>
             <span style={{fontSize:13,color:th.sub,flexShrink:0}}>일</span>
           </div>
         </div>
         <div style={{flex:1}}>
           <div style={{fontSize:11,color:th.sub,marginBottom:4}}>결제금액 확정일</div>
           <div style={{display:'flex',alignItems:'center',gap:6}}>
-            <input type="number" min="1" max="31" value={cutoffDay} onChange={e=>{const v=Math.max(1,Math.min(31,Number(e.target.value)||1));uCutoffDay(v);}} style={{flex:1,border:`2px solid ${th.border}`,borderRadius:12,padding:'10px 12px',outline:'none',background:th.card,color:th.text,textAlign:'left'}}/>
+            <input className="compact" onFocus={e=>e.target.select()} type="number" min="1" max="31" value={cutoffDay} onChange={e=>{const v=Math.max(1,Math.min(31,Number(e.target.value)||1));uCutoffDay(v);}} style={{flex:1,width:'100%',border:`1.5px solid ${th.border}`,borderRadius:8,padding:'6px 10px',outline:'none',background:th.card,color:th.text,textAlign:'left'}}/>
             <span style={{fontSize:13,color:th.sub,flexShrink:0}}>일</span>
           </div>
         </div>
       </div>
-      <div style={{fontSize:10,color:th.sub,lineHeight:1.6}}>💡 <b>결제일</b>: 통장에서 카드값이 빠져나가는 날. <b>확정일</b>: 그 결제액이 고정되는 날(보통 결제일 2주 전, 카드사별 상이). 홈에서 "이번 결제(확정) / 다음 결제(진행 중)"를 구분해 보여줘요</div>
+      <div style={{fontSize:10,color:th.sub,lineHeight:1.7}}>
+        💡 <b>결제일</b>: 통장에서 카드값이 빠져나가는 날.<br/>
+        <b>확정일</b>: 그 결제액이 고정되는 날 (보통 결제일 2주 전, 카드사별 상이).<br/>
+        홈에서 "이번 결제(확정) / 다음 결제(진행 중)"를 구분해서 보여줘요.
+      </div>
     </div>
 
     {/* ★ 카테고리 섹션 - 접기/펼치기 */}
-    <CatSection title="💸 지출 카테고리" open={openCat==='exp'} onToggle={()=>setOpenCat(openCat==='exp'?null:'exp')} onAdd={()=>setModal({type:'catEdit',cat:null,onSave:nc=>uCats([...cats,{id:Date.now(),...nc}])})}>
+    <CatSection title="💸 지출 카테고리" open={openCat==='exp'} onToggle={()=>setOpenCat(openCat==='exp'?null:'exp')} onAdd={()=>setModal({type:'catEdit',cat:null,onSave:nc=>uCats([...cats,{id:uid(),...nc}])})}>
       {cats.map(c=><CatRow key={c.id} c={c} onEdit={c=>setModal({type:'catEdit',cat:c,onSave:u=>uCats(cats.map(x=>x.id===c.id?{...x,...u}:x))})} onDel={id=>uCats(cats.filter(x=>x.id!==id))}/>)}
     </CatSection>
-    <CatSection title="💰 수입 카테고리" open={openCat==='inc'} onToggle={()=>setOpenCat(openCat==='inc'?null:'inc')} onAdd={()=>setModal({type:'catEdit',cat:null,onSave:nc=>uIncCats([...incCats,{id:Date.now(),...nc}])})}>
+    <CatSection title="💰 수입 카테고리" open={openCat==='inc'} onToggle={()=>setOpenCat(openCat==='inc'?null:'inc')} onAdd={()=>setModal({type:'catEdit',cat:null,onSave:nc=>uIncCats([...incCats,{id:uid(),...nc}])})}>
       {incCats.map(c=><CatRow key={c.id} c={c} onEdit={c=>setModal({type:'catEdit',cat:c,onSave:u=>uIncCats(incCats.map(x=>x.id===c.id?{...x,...u}:x))})} onDel={id=>uIncCats(incCats.filter(x=>x.id!==id))}/>)}
     </CatSection>
     <CatSection title="📌 고정지출 카테고리" open={openCat==='fx'} onToggle={()=>setOpenCat(openCat==='fx'?null:'fx')} onAdd={()=>setModal({type:'fxCatEdit',cat:null,idx:null,fxCats,uFxCats})}>
-      {fxCats.map((c,i)=>{const nm=typeof c==='string'?c:c.name;return(<div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{flex:1,fontSize:13,fontWeight:600,color:th.text}}>📌 {nm}</div><button onClick={()=>setModal({type:'fxCatEdit',cat:c,idx:i,fxCats,uFxCats})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button><button onClick={()=>{if(confirm(`'${nm}' 고정지출 카테고리를 삭제할까요?`))uFxCats(fxCats.filter((_,j)=>j!==i));}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button></div>);})}
+      {fxCats.map((c,i)=>{const nm=typeof c==='string'?c:c.name;return(<div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}><div style={{flex:1,fontSize:13,fontWeight:600,color:th.text}}>📌 {nm}</div><button onClick={()=>setModal({type:'fxCatEdit',cat:c,idx:i,fxCats,uFxCats})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button><button onClick={()=>{if(confirm(`'${nm}' 고정지출 카테고리를 삭제할까요?`))uFxCats(fxCats.filter((_,j)=>j!==i));}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button></div>);})}
     </CatSection>
     <CatSection title="📈 투자/자산 카테고리" open={openCat==='iv'} onToggle={()=>setOpenCat(openCat==='iv'?null:'iv')} onAdd={()=>setModal({type:'ivCatEdit',cat:null})}>
       {ivCats.map(c=>(<div key={c.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 0',borderBottom:`1px solid ${th.border}`}}>
@@ -1415,7 +1445,7 @@ function SettingsTab({sal,curSal,salMK,salOv,uSal,uSalOv,cats,incCats,uCats,uInc
           <span style={{fontSize:13,fontWeight:600,color:th.text}}>{c.name}</span>
           {c.isWedding&&<span style={{fontSize:9,color:th.primary,background:th.border,borderRadius:6,padding:'2px 6px',fontWeight:700}}>🎯 목표자금</span>}
         </div>
-        <button onClick={()=>setModal({type:'ivCatEdit',cat:c})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>편집</button>
+        <button onClick={()=>setModal({type:'ivCatEdit',cat:c})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button>
       </div>))}
     </CatSection>
 
@@ -1471,11 +1501,9 @@ function Modals(props){
   const I={width:'100%',border:`2px solid ${th.border}`,borderRadius:12,padding:'12px 14px',boxSizing:'border-box',outline:'none',fontFamily:'inherit',background:th.card,color:th.text,display:'block'};
   const p={OV,SH,I,close,th};
   if(modal.type==='appName')return <AppNameM {...p} appName={appName} uAppName={uAppName}/>;
-  if(modal.type==='sal')return <SalM {...p} sal={sal} uSal={uSal}/>;
-  if(modal.type==='salOv')return <SalOvM {...p} monthKey={modal.monthKey} curVal={modal.curVal} defaultSal={modal.defaultSal} salOv={salOv} uSalOv={uSalOv}/>;
   if(modal.type==='txn')return <TxM {...p} addTx={addTx} updateTx={updateTx} delTx={delTx} editTx={modal.editTx} initDate={modal.data?.date} cats={cats} incCats={incCats}/>;
   if(modal.type==='fx')return <FxM {...p} fx={fx} uFx={uFx} item={modal.data} fxCats={fxCats}/>;
-  if(modal.type==='fxIn')return <FxInM {...p} fxIn={fxIn||[]} uFxIn={uFxIn} item={modal.data}/>;
+  if(modal.type==='fxIn')return <FxInM {...p} fxIn={fxIn||[]} uFxIn={uFxIn} fxInOv={fxInOv||{}} uFxInOv={uFxInOv} item={modal.data}/>;
   if(modal.type==='fxInOv')return <FxInOvM {...p} fxInId={modal.fxInId} fxInName={modal.fxInName} defaultAmt={modal.defaultAmt} monthKey={modal.monthKey} fxInOv={fxInOv||{}} uFxInOv={uFxInOv}/>;
   if(modal.type==='iv')return <IvM {...p} iv={iv} uIv={uIv} ivKey={modal.key} ivCats={ivCats}/>;
   if(modal.type==='wg')return <WgM {...p} wg={wg} uWg={uWg}/>;
@@ -1489,8 +1517,6 @@ function Modals(props){
   return null;
 }
 
-function SalM({OV,SH,I,close,th,sal,uSal}){const[v,setV]=useState(sal);return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:10,color:th.text}}>💰 기본 월급 수정</div><MoneyInput value={v} onChange={setV} style={{...I,marginBottom:14}}/><button onClick={()=>{if(v>0){uSal(v);close();}}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>저장</button></div></div>);}
-function SalOvM({OV,SH,I,close,th,monthKey,curVal,defaultSal,salOv,uSalOv}){const[v,setV]=useState(curVal);const isOv=!!salOv[monthKey];return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>💰 이번 달 월급 수정</div><div style={{fontSize:11,color:th.sub,marginBottom:10}}><b style={{color:th.primary}}>{monthKey}</b> 이번 달만 변경 · 기본: {won(defaultSal)}</div><MoneyInput value={v} onChange={setV} style={{...I,marginBottom:14}}/><button onClick={()=>{uSalOv({...salOv,[monthKey]:Number(v)});close();}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer',marginBottom:8}}>이번 달 적용</button>{isOv&&<button onClick={()=>{const n={...salOv};delete n[monthKey];uSalOv(n);close();}} style={{width:'100%',background:th.border,color:th.sub,border:'none',borderRadius:12,padding:'11px',fontSize:12,cursor:'pointer'}}>기본값으로 초기화</button>}</div></div>);}
 
 function TxM({OV,SH,I,close,th,addTx,updateTx,delTx,editTx,initDate,cats,incCats}){
   const isEdit=!!editTx;
@@ -1501,11 +1527,11 @@ function TxM({OV,SH,I,close,th,addTx,updateTx,delTx,editTx,initDate,cats,incCats
   const[date,setDate]=useState(editTx?.date||initDate||TODAY);
   const[payType,setPayType]=useState(editTx?.payType||'cash');
   const iCats=tp==='exp'?cats:incCats;
-  const save=()=>{if(!amt||Number(amt)<=0)return;const t={...(editTx||{}),id:editTx?.id||Date.now(),date,tp,amt:Number(amt),cat,memo,payType:tp==='exp'?payType:'cash'};isEdit?updateTx(t):addTx(t);close();};
+  const save=()=>{if(!amt||Number(amt)<=0)return;const t={...(editTx||{}),id:editTx?.id||uid(),date,tp,amt:Number(amt),cat,memo,payType:tp==='exp'?payType:'cash'};isEdit?updateTx(t):addTx(t);close();};
   const acctRole=findRole(cat,cats,incCats);
   const tipMsg=acctRole==='jar'?'🐷 지출→저금통 이동 / 수입→인출':acctRole==='parking'?'💳 지출→파킹 이동 / 수입→인출':null;
   return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
-    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}><div style={{fontSize:16,fontWeight:700,color:th.text}}>{isEdit?'✏️ 내역 수정':'📝 내역 추가'}</div>{isEdit&&<button onClick={()=>{if(!confirm(`이 거래 내역을 삭제할까요?\n${editTx.date} · ${editTx.cat} · ${won(editTx.amt)}`))return;delTx(editTx.id);close();}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'5px 10px',fontSize:11,cursor:'pointer',color:'#dc2626',fontWeight:600}}>🗑 삭제</button>}</div>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}><div style={{fontSize:16,fontWeight:700,color:th.text}}>{isEdit?'✏️ 내역 수정':'➕ 내역 추가'}</div>{isEdit&&<button onClick={()=>{if(!confirm(`이 거래 내역을 삭제할까요?\n${editTx.date} · ${editTx.cat} · ${won(editTx.amt)}`))return;delTx(editTx.id);close();}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'5px 10px',fontSize:11,cursor:'pointer',color:'#dc2626',fontWeight:600}}>🗑 삭제</button>}</div>
     <div style={{display:'flex',gap:8,marginBottom:12}}>{[['exp','💸 지출'],['inc','💰 수입']].map(([v,lb])=>(<button key={v} onClick={()=>{setTp(v);if(!isEdit)setCat((v==='exp'?cats:incCats)[0]?.name||'기타');}} style={{flex:1,border:'none',borderRadius:12,padding:'10px',fontSize:12,fontWeight:700,cursor:'pointer',background:tp===v?th.primary:th.border,color:tp===v?'#fff':th.sub}}>{lb}</button>))}</div>
     {/* ★ 날짜/금액 너비 통일 */}
     <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...I,marginBottom:10}}/>
@@ -1560,7 +1586,7 @@ function FxCatEditM({OV,SH,I,close,th,cat,idx,fxCats,uFxCats}){
     uFxCats(n);close();
   };
   return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
-    <div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>{cat?'✏️ 고정지출 카테고리 수정':'➕ 고정지출 카테고리 추가'}</div>
+    <div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>{cat?'✏️ 카테고리 수정':'➕ 고정지출 카테고리 추가'}</div>
     <div style={{display:'flex',gap:10,marginBottom:10}}>
       <div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>아이콘</div><input value={ic} onChange={e=>setIc(e.target.value)} style={{...I,textAlign:'center'}} placeholder="📌"/></div>
       <div style={{flex:3}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>이름</div><input value={v} onChange={e=>setV(e.target.value)} placeholder="카테고리명" style={I}/></div>
@@ -1590,7 +1616,7 @@ function IvCatEditM({OV,SH,I,close,th,cat,ivCats,uIvCats}){
     let newList;
     const buildUpdate=()=>({name:trimmedName,icon:icon.trim()||'📊',isWedding:isWed,isParking:isPark,isJar});
     if(isNew){
-      const newCat={id:'iv_'+Date.now(),...buildUpdate()};
+      const newCat={id:'iv_'+uid(),...buildUpdate()};
       newList=ivCats.map(c=>({...c,
         isWedding:isWed?false:c.isWedding,
         isParking:isPark?false:c.isParking,
@@ -1654,25 +1680,27 @@ function IvCatEditM({OV,SH,I,close,th,cat,ivCats,uIvCats}){
 
 function FxM({OV,SH,I,close,th,fx,uFx,item,fxCats}){
   const[name,setName]=useState(item?.name||'');const[amt,setAmt]=useState(item?.amount||0);const[day,setDay]=useState(item?.day||1);const[cat,setCat]=useState(item?.cat||(typeof fxCats[0]==='string'?fxCats[0]:fxCats[0]?.name)||'생활비');
-  const save=()=>{if(!name||!amt||Number(amt)<=0)return;uFx(item?fx.map(f=>f.id===item.id?{...f,name,amount:Number(amt),day:Number(day),cat}:f):[...fx,{id:Date.now(),name,amount:Number(amt),day:Number(day),cat}]);close();};
+  const save=()=>{if(!name||!amt||Number(amt)<=0)return;uFx(item?fx.map(f=>f.id===item.id?{...f,name,amount:Number(amt),day:Number(day),cat}:f):[...fx,{id:uid(),name,amount:Number(amt),day:Number(day),cat}]);close();};
   return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}><div style={{fontSize:16,fontWeight:700,color:th.text}}>{item?'✏️ 고정지출 수정':'➕ 고정지출 추가'}</div>{item&&<button onClick={()=>{if(!confirm(`"${item.name}" 고정지출을 완전히 삭제할까요?`))return;uFx(fx.filter(f=>f.id!==item.id));close();}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'5px 10px',fontSize:11,cursor:'pointer',color:'#dc2626',fontWeight:600}}>🗑 삭제</button>}</div>
     <input placeholder="항목명" value={name} onChange={e=>setName(e.target.value)} style={{...I,marginBottom:10,textAlign:'left'}}/>
     <MoneyInput placeholder="금액 (원)" value={amt} onChange={setAmt} style={{...I,marginBottom:10,textAlign:'left'}}/>
     <div style={{display:'flex',gap:10,marginBottom:14}}>
-      <div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>기본 지출일</div><input type="number" min="1" max="31" value={day} onChange={e=>setDay(e.target.value)} style={{...I,textAlign:'left'}}/></div>
+      <div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>기본 지출일</div><input onFocus={e=>e.target.select()} type="number" min="1" max="31" value={day} onChange={e=>setDay(e.target.value)} style={{...I,textAlign:'left'}}/></div>
       <div style={{flex:2}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>카테고리</div><select value={cat} onChange={e=>setCat(e.target.value)} style={{...I}}>{(fxCats.length?fxCats:FX_CATS_I).map((c,i)=>{const nm=typeof c==='string'?c:c.name;return <option key={i} value={nm}>{nm}</option>;})}</select></div>
     </div>
     <button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>저장</button>
   </div></div>);
 }
 
-function FxInM({OV,SH,I,close,th,fxIn,uFxIn,item}){
+function FxInM({OV,SH,I,close,th,fxIn,uFxIn,fxInOv,uFxInOv,item}){
   const activeList=(fxIn||[]).filter(f=>!f.df);
   const currentPrimary=activeList.find(f=>f.primary);
   const isOnlyActive=activeList.length===0||(item&&activeList.length===1&&activeList[0].id===item.id);
   const[name,setName]=useState(item?.name||'');const[amt,setAmt]=useState(item?.amount||0);const[day,setDay]=useState(item?.day||1);
   const[primary,setPrimary]=useState(item?!!item.primary:false);
+  // 편집 모드에서 이 항목에 월별 override가 존재하는지 확인 (있으면 편집 시 자동 초기화)
+  const hasOverride=item&&fxInOv&&Object.values(fxInOv).some(m=>m&&m[item.id]!==undefined);
   const save=()=>{
     if(!name||!amt||Number(amt)<=0)return;
     // 주 수입 체크: 이 항목을 primary로 만들고 나머지는 해제
@@ -1680,8 +1708,18 @@ function FxInM({OV,SH,I,close,th,fxIn,uFxIn,item}){
     let next;
     if(item){
       next=fxIn.map(f=>f.id===item.id?{...f,name,amount:Number(amt),day:Number(day),primary:mkPrimary}:(mkPrimary?{...f,primary:false}:f));
+      // 금액이 변경된 경우 월별 override 전부 초기화 (편집이 즉시 반영되도록)
+      if(uFxInOv&&fxInOv&&Number(amt)!==Number(item.amount||0)){
+        const clean={};
+        Object.keys(fxInOv).forEach(mk=>{
+          const cp={...(fxInOv[mk]||{})};
+          if(cp[item.id]!==undefined)delete cp[item.id];
+          if(Object.keys(cp).length>0)clean[mk]=cp;
+        });
+        uFxInOv(clean);
+      }
     }else{
-      const newItem={id:Date.now(),name,amount:Number(amt),day:Number(day),df:null,primary:mkPrimary};
+      const newItem={id:uid(),name,amount:Number(amt),day:Number(day),df:null,primary:mkPrimary};
       next=mkPrimary?[...fxIn.map(f=>({...f,primary:false})),newItem]:[...fxIn,newItem];
     }
     uFxIn(next);close();
@@ -1692,7 +1730,7 @@ function FxInM({OV,SH,I,close,th,fxIn,uFxIn,item}){
     <MoneyInput placeholder="금액 (원)" value={amt} onChange={setAmt} style={{...I,marginBottom:10,textAlign:'left'}}/>
     <div style={{marginBottom:14}}>
       <div style={{fontSize:11,color:th.sub,marginBottom:4}}>매월 입금일 (1~31)</div>
-      <input type="number" min="1" max="31" value={day} onChange={e=>setDay(e.target.value)} style={{...I,textAlign:'left'}}/>
+      <input onFocus={e=>e.target.select()} type="number" min="1" max="31" value={day} onChange={e=>setDay(e.target.value)} style={{...I,textAlign:'left'}}/>
     </div>
     <label style={{display:'flex',alignItems:'flex-start',gap:10,padding:'10px 12px',border:`1.5px solid ${primary?th.primary:th.border}`,borderRadius:12,marginBottom:14,cursor:isOnlyActive?'default':'pointer',background:primary?`${th.primary}0d`:th.card}}>
       <input type="checkbox" checked={primary||isOnlyActive} disabled={isOnlyActive} onChange={e=>setPrimary(e.target.checked)} style={{marginTop:2,width:16,height:16,accentColor:th.primary,cursor:isOnlyActive?'default':'pointer'}}/>
@@ -1712,7 +1750,7 @@ function FxInOvM({OV,SH,I,close,th,fxInId,fxInName,defaultAmt,monthKey,fxInOv,uF
   const save=()=>{uFxInOv({...fxInOv,[monthKey]:{...(fxInOv[monthKey]||{}),[fxInId]:Number(a)}});close();};
   const reset=()=>{const n={...fxInOv};if(n[monthKey]){delete n[monthKey][fxInId];if(!Object.keys(n[monthKey]).length)delete n[monthKey];}uFxInOv(n);close();};
   return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
-    <div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>💵 {fxInName} — 이번 달 편집</div>
+    <div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>💵 {fxInName} — 이번 달 수정</div>
     <div style={{fontSize:11,color:th.sub,marginBottom:14,lineHeight:1.6}}><b style={{color:th.primary}}>{monthKey}</b> 이번 달만 변경돼요.<br/>기본: {won(defaultAmt)}</div>
     <div style={{marginBottom:14}}>
       <div style={{fontSize:11,color:th.sub,marginBottom:4}}>금액</div>
@@ -1728,10 +1766,10 @@ function FxMonthM({OV,SH,I,close,th,fxId,fxName,fxDefaultDay,fxDefaultAmt,monthK
   const save=()=>{uFxOv({...fxOv,[monthKey]:{...(fxOv[monthKey]||{}),[fxId]:{day:Number(d),amount:Number(a)}}});close();};
   const reset=()=>{const n={...fxOv};if(n[monthKey]){delete n[monthKey][fxId];if(!Object.keys(n[monthKey]).length)delete n[monthKey];}uFxOv(n);close();};
   return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
-    <div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>📌 {fxName} — 이번 달 편집</div>
+    <div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>📌 {fxName} — 이번 달 수정</div>
     <div style={{fontSize:11,color:th.sub,marginBottom:14,lineHeight:1.6}}><b style={{color:th.primary}}>{monthKey}</b> 이번 달만 변경돼요.<br/>기본: {fxDefaultDay}일 / {won(fxDefaultAmt)}</div>
     <div style={{display:'flex',gap:10,marginBottom:14}}>
-      <div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>출금일</div><input type="number" min="1" max="31" value={d} onChange={e=>setD(e.target.value)} style={I}/></div>
+      <div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>출금일</div><input onFocus={e=>e.target.select()} type="number" min="1" max="31" value={d} onChange={e=>setD(e.target.value)} style={I}/></div>
       <div style={{flex:2}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>금액</div><MoneyInput value={a} onChange={setA} style={I}/></div>
     </div>
     <button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer',marginBottom:8}}>이번 달 적용</button>
@@ -1757,7 +1795,7 @@ function IvM({OV,SH,I,close,th,iv,uIv,ivKey,ivCats}){
   const wedCat=ivCats.find(c=>c.isWedding);
   const save=()=>{
     if(!name.trim())return;
-    const newKey=isNew?('iv_'+Date.now()):ivKey;
+    const newKey=isNew?('iv_'+uid()):ivKey;
     const pd=useSalDay?null:Math.max(1,Math.min(31,Number(payDay)||1));
     const prev=iv[newKey]||{};
     const next={name:name.trim(),current:Number(cur),monthly:Number(mo),ic:ic.trim()||'💰',cat,payDay:pd,fromCash};
@@ -1796,7 +1834,7 @@ function IvM({OV,SH,I,close,th,iv,uIv,ivKey,ivCats}){
       </div>
       {!useSalDay&&(
         <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <input type="number" min="1" max="31" value={payDay} onChange={e=>setPayDay(e.target.value)} style={{...I,flex:1,textAlign:'left'}}/>
+          <input onFocus={e=>e.target.select()} type="number" min="1" max="31" value={payDay} onChange={e=>setPayDay(e.target.value)} style={{...I,flex:1,textAlign:'left'}}/>
           <span style={{fontSize:12,color:th.sub,flexShrink:0}}>일</span>
         </div>
       )}
@@ -1816,9 +1854,56 @@ function IvM({OV,SH,I,close,th,iv,uIv,ivKey,ivCats}){
     <button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>{isNew?'추가':'저장'}</button>
   </div></div>);
 }
-function WgM({OV,SH,I,close,th,wg,uWg}){const[t,setT]=useState(wg.target||0);const[y,setY]=useState(wg.year||'');const[m,setM]=useState(wg.month||12);const[n,setN]=useState(wg.name||'');const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];const isNew=!wg.target||!wg.year||!wg.name;return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>🎯 {isNew?'목표 설정':'목표 수정'}</div><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 이름</div><input value={n} onChange={e=>setN(e.target.value)} placeholder="예: 결혼 자금, 내집마련, 노후준비" style={{...I,marginBottom:10}}/><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 금액</div><MoneyInput value={t} onChange={setT} style={{...I,marginBottom:10}}/><div style={{display:'flex',gap:10,marginBottom:14}}><div style={{flex:2}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 연도</div><input type="number" value={y} min={2025} max={2040} placeholder={String(new Date().getFullYear()+3)} onChange={e=>setY(e.target.value)} style={I}/></div><div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 월</div><select value={m} onChange={e=>setM(Number(e.target.value))} style={{...I,padding:'12px 6px'}}>{MO.map((lb,i)=><option key={i+1} value={i+1}>{lb}</option>)}</select></div></div><button onClick={()=>{if(Number(t)>0&&Number(y)>2024&&n.trim()){uWg({target:Number(t),year:Number(y),month:Number(m),name:n.trim()});close();}else{alert('이름·금액·연도를 모두 입력해 주세요.');}}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>저장</button></div></div>);}
-function AdjM({OV,SH,I,close,th,baseA,initAdj,uAdj}){const[v,setV]=useState(baseA-initAdj);return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>💰 이번 달 잔액 설정</div><div style={{fontSize:12,color:th.sub,marginBottom:14}}>기본 가용 금액: <b style={{color:th.primary}}>{won(baseA)}</b></div><MoneyInput value={v} onChange={setV} style={{...I,marginBottom:6}}/><div style={{fontSize:11,color:th.sub,marginBottom:16}}>→ 이미 쓴 금액 <b style={{color:'#dc2626'}}>{won(Math.max(0,baseA-Number(v)))}</b> 반영</div><button onClick={()=>{uAdj(Math.max(0,baseA-Number(v)));close();}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>적용하기</button></div></div>);}
-function ThemeM({OV,SH,close,th,theme,uTheme}){const groups=[['기본 테마',Object.values(THEMES).slice(0,10)],['🎨 패턴 테마',Object.values(THEMES).slice(10)]];return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>🎨 테마 선택 (15가지)</div>{groups.map(([gname,list])=>(<div key={gname} style={{marginBottom:14}}><div style={{fontSize:11,color:th.sub,fontWeight:600,marginBottom:8}}>{gname}</div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>{list.map(t=>(<button key={t.id} onClick={()=>{uTheme(t.id);close();}} style={{border:`3px solid ${theme===t.id?t.primary:'transparent'}`,borderRadius:14,padding:'10px',cursor:'pointer',background:t.bg,backgroundImage:t.pat||'none',backgroundSize:t.patSz||'auto',textAlign:'center'}}><div style={{background:t.grad,borderRadius:8,height:26,marginBottom:6}}/><div style={{fontSize:11,fontWeight:700,color:t.text}}>{t.name}</div>{theme===t.id&&<div style={{fontSize:9,color:t.primary,marginTop:2,fontWeight:600}}>✓ 현재</div>}</button>))}</div></div>))}</div></div>);}
+function WgM({OV,SH,I,close,th,wg,uWg}){const[t,setT]=useState(wg.target||0);const[y,setY]=useState(wg.year||'');const[m,setM]=useState(wg.month||12);const[n,setN]=useState(wg.name||'');const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];const isNew=!wg.target||!wg.year||!wg.name;return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}><div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>🎯 {isNew?'목표 설정':'목표 수정'}</div><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 이름</div><input value={n} onChange={e=>setN(e.target.value)} placeholder="예: 결혼 자금, 내집마련, 노후준비" style={{...I,marginBottom:10}}/><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 금액</div><MoneyInput value={t} onChange={setT} style={{...I,marginBottom:10}}/><div style={{display:'flex',gap:10,marginBottom:14}}><div style={{flex:2}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 연도</div><input onFocus={e=>e.target.select()} type="number" value={y} min={2025} max={2040} placeholder={String(new Date().getFullYear()+3)} onChange={e=>setY(e.target.value)} style={I}/></div><div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>목표 월</div><select value={m} onChange={e=>setM(Number(e.target.value))} style={{...I,padding:'12px 6px'}}>{MO.map((lb,i)=><option key={i+1} value={i+1}>{lb}</option>)}</select></div></div><button onClick={()=>{if(Number(t)>0&&Number(y)>2024&&n.trim()){uWg({target:Number(t),year:Number(y),month:Number(m),name:n.trim()});close();}else{alert('이름·금액·연도를 모두 입력해 주세요.');}}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>저장</button></div></div>);}
+function AdjM({OV,SH,I,close,th,baseA,initAdj,uAdj}){
+  const[v,setV]=useState(baseA-initAdj);
+  const isAdjusted=initAdj>0;
+  return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
+    <div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>💰 이번 달 잔액 설정</div>
+    <div style={{fontSize:12,color:th.sub,marginBottom:14}}>기본 가용 금액: <b style={{color:th.primary}}>{won(baseA)}</b></div>
+    <MoneyInput value={v} onChange={setV} style={{...I,marginBottom:6,textAlign:'left'}}/>
+    <div style={{fontSize:11,color:th.sub,marginBottom:16}}>→ 이미 쓴 금액 <b style={{color:'#dc2626'}}>{won(Math.max(0,baseA-Number(v)))}</b> 반영</div>
+    <button onClick={()=>{uAdj(Math.max(0,baseA-Number(v)));close();}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer',marginBottom:8}}>적용하기</button>
+    {isAdjusted&&(
+      <button onClick={()=>{uAdj(0);close();}} style={{width:'100%',background:th.border,color:th.sub,border:'none',borderRadius:12,padding:'11px',fontSize:12,cursor:'pointer',fontWeight:600}}>🔄 초기화 (자동 계산값으로 되돌리기)</button>
+    )}
+  </div></div>);
+}
+function ThemeM({OV,SH,close,th,theme,uTheme}){
+  const groups=[['기본 테마',Object.values(THEMES).slice(0,10)],['🎨 패턴 테마',Object.values(THEMES).slice(10)]];
+  // 각 테마 카드에 미니 앱 프리뷰 (헤더 + 가용금액 + 버튼 모습)
+  const MiniPreview=({t})=>(
+    <div style={{background:t.bg,backgroundImage:t.pat||'none',backgroundSize:t.patSz||'auto',borderRadius:10,overflow:'hidden',border:`1px solid ${t.border}`}}>
+      <div style={{background:t.grad,padding:'5px 7px',color:'#fff',fontSize:8,fontWeight:700}}>🏠 홈</div>
+      <div style={{padding:'5px 7px'}}>
+        <div style={{background:t.grad,borderRadius:5,padding:'4px 6px',color:'#fff',fontSize:8,fontWeight:800,marginBottom:3}}>₩ 1,234,567</div>
+        <div style={{display:'flex',gap:3}}>
+          <div style={{flex:1,height:8,background:t.border,borderRadius:3}}/>
+          <div style={{width:14,height:8,background:t.primary,borderRadius:3}}/>
+        </div>
+      </div>
+    </div>
+  );
+  return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
+    <div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>🎨 테마 선택 ({Object.keys(THEMES).length}가지)</div>
+    {groups.map(([gname,list])=>(
+      <div key={gname} style={{marginBottom:14}}>
+        <div style={{fontSize:11,color:th.sub,fontWeight:600,marginBottom:8}}>{gname}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+          {list.map(t=>(
+            <button key={t.id} onClick={()=>{uTheme(t.id);close();}} style={{border:`2.5px solid ${theme===t.id?t.primary:'transparent'}`,borderRadius:14,padding:'8px',cursor:'pointer',background:'#fff',textAlign:'left',display:'flex',flexDirection:'column',gap:6,boxShadow:theme===t.id?`0 0 0 3px ${t.primary}22`:'none',transition:'all .15s'}}>
+              <MiniPreview t={t}/>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 2px'}}>
+                <div style={{fontSize:11,fontWeight:700,color:'#374151'}}>{t.name}</div>
+                {theme===t.id&&<div style={{fontSize:10,color:t.primary,fontWeight:700}}>✓</div>}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div></div>);
+}
 
 function IvOvM({OV,SH,I,close,th,iv,ivOv,uIvOv,ivKey,ivName,monthKey,defaultAmt}){
   const ov=ivOv[monthKey]?.[ivKey];
@@ -1827,7 +1912,7 @@ function IvOvM({OV,SH,I,close,th,iv,ivOv,uIvOv,ivKey,ivName,monthKey,defaultAmt}
   const save=()=>{uIvOv({...ivOv,[monthKey]:{...(ivOv[monthKey]||{}),[ivKey]:Number(v)}});close();};
   const reset=()=>{const n={...ivOv};if(n[monthKey]){delete n[monthKey][ivKey];if(!Object.keys(n[monthKey]).length)delete n[monthKey];}uIvOv(n);close();};
   return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
-    <div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>{ivName} — 이번 달 편집</div>
+    <div style={{fontSize:16,fontWeight:700,marginBottom:6,color:th.text}}>{ivName} — 이번 달 수정</div>
     <div style={{fontSize:11,color:th.sub,marginBottom:14,lineHeight:1.6}}><b style={{color:th.primary}}>{monthKey}</b> 이번 달만 변경돼요.<br/>기본: {won(defaultAmt)}</div>
     <MoneyInput value={v} onChange={setV} style={{...I,marginBottom:14}}/>
     <button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer',marginBottom:8}}>이번 달 적용</button>
