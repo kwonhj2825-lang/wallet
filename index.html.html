@@ -278,7 +278,11 @@ if(PREVIEW_MODE){
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const sv=(k,v)=>{
   if(PREVIEW_MODE)return; // 미리보기 모드에서는 저장/싱크 안 함
-  try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}
+  try{
+    localStorage.setItem(k,JSON.stringify(v));
+    // 로컬 편집 타임스탬프 기록 — 다음 세션에서 unsynced 감지용 (hj9-lastLocal* 키는 클라우드 싱크 제외)
+    if(!k.startsWith('hj9-last'))localStorage.setItem('hj9-lastLocalEdit',String(Date.now()));
+  }catch(e){}
   if(window.__scheduleCloudSync)window.__scheduleCloudSync();
 };
 const lv=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}};
@@ -295,6 +299,7 @@ function _syncNow(){
   payload.__updatedAt=FB.serverTimestamp();
   payload.__appVersion=APP_VERSION;
   return FB.setDoc(FB.doc(FB.db,'users',uid),payload,{merge:true}).then(()=>{
+    try{localStorage.setItem('hj9-lastCloudSync',String(Date.now()));}catch(e){}
     if(window.__onCloudSynced)window.__onCloudSynced();
   }).catch(e=>{
     console.warn('cloud sync failed:',e&&e.code,e&&e.message);
@@ -505,12 +510,14 @@ function App(){
       const oldSal=lv('hj9-sal')||1000000;
       const seedId=uid();
       loadedFxIn=[{id:seedId,name:'월급',amount:oldSal,day:21,df:null,primary:true}];
-      sv('hj9-fxin',loadedFxIn);
+      // 마이그레이션 시드 저장 — sv() 대신 직접 localStorage에 써서 lastLocalEdit 갱신 방지
+      // (아직 사용자 편집이 없는데 pending으로 오인되어 클라우드에 밀어올리는 걸 방지)
+      try{localStorage.setItem('hj9-fxin',JSON.stringify(loadedFxIn));}catch(e){}
       const oldSalOv=lv('hj9-salOv');
       if(oldSalOv&&typeof oldSalOv==='object'&&Object.keys(oldSalOv).length){
         const seed={};
         Object.entries(oldSalOv).forEach(([mk,amt])=>{seed[mk]={[seedId]:Number(amt)};});
-        sv('hj9-fxinov',seed);
+        try{localStorage.setItem('hj9-fxinov',JSON.stringify(seed));}catch(e){}
       }
     }
     setFxIn(loadedFxIn);
@@ -592,6 +599,17 @@ function App(){
           const ref=FB.doc(FB.db,'users',user.uid);
           const snap=await FB.getDoc(ref);
           const localHas=BACKUP_KEYS.some(k=>{const v=lv(k);return v!==null&&v!==undefined;});
+          // 로컬에 미싱크 변경사항이 있는지 판정 — 있으면 클라우드 다운로드 대신 로컬을 밀어올림
+          const lastLocal=Number(localStorage.getItem('hj9-lastLocalEdit')||0);
+          const lastCloud=Number(localStorage.getItem('hj9-lastCloudSync')||0);
+          const hasPending=localHas&&lastLocal>lastCloud;
+          if(hasPending){
+            // 직전 세션에서 편집 후 싱크 못한 변경사항 존재 → 로컬 우선 업로드
+            console.log('로컬 미싱크 변경사항 감지 — 클라우드로 업로드');
+            scheduleCloudSync();
+            try{sessionStorage.setItem('fb-synced-uid',user.uid);}catch(e){}
+            return;
+          }
           if(snap.exists()){
             const cd=snap.data()||{};
             const cloudKeys=Object.keys(cd).filter(k=>k.startsWith('hj9-'));
@@ -602,6 +620,12 @@ function App(){
                 if(k in cd)localStorage.setItem(k,JSON.stringify(cd[k]));
                 else localStorage.removeItem(k);
               });
+              // 다운로드 직후 싱크 타임스탬프 동기화 (이후 sv는 정상적으로 업로드 트리거)
+              try{
+                const now=String(Date.now());
+                localStorage.setItem('hj9-lastCloudSync',now);
+                localStorage.setItem('hj9-lastLocalEdit',now);
+              }catch(e){}
               window.__setCloudSyncPaused(false);
               try{sessionStorage.setItem('fb-synced-uid',user.uid);}catch(e){}
               if(window.__applyStatesFromStorage)window.__applyStatesFromStorage();
