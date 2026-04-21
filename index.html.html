@@ -256,10 +256,20 @@ function applyIvAutoGrow(ivObj,today,primaryDay){
 
 function applyAcct(t,sign,base,cats,incCats,ivCats){
   const role=findRole(t.cat,cats,incCats);
-  const key=findIvKeyByRole(role,base,ivCats);
-  if(!key||!base[key])return base;
+  if(!role)return base;
+  const flag=role==='parking'?'isParking':role==='jar'?'isJar':null;
+  if(!flag)return base;
+  const targetCat=ivCats.find(c=>c[flag]);
+  if(!targetCat)return base;
+  let newBase=base;
+  let key=findIvKeyByRole(role,base,ivCats);
+  // 매칭되는 iv 항목이 없으면 자동 생성 (예: 저금통 카테고리 첫 지출 시 자산 저금통 자동 만들어줌)
+  if(!key){
+    key='iv_auto_'+role;
+    newBase={...base,[key]:{name:targetCat.name,current:0,monthly:0,ic:targetCat.icon||'🐷',cat:targetCat.name,payDay:null,fromCash:true}};
+  }
   const d=sign*(t.tp==='exp'?t.amt:-t.amt);
-  return{...base,[key]:{...base[key],current:base[key].current+d}};
+  return{...newBase,[key]:{...newBase[key],current:(newBase[key].current||0)+d}};
 }
 
 function Cd(th,x={}){return{background:th.card,borderRadius:16,padding:'14px',boxShadow:'0 2px 10px rgba(0,0,0,0.06)',marginBottom:10,...x};}
