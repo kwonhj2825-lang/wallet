@@ -1871,34 +1871,30 @@ function AdjM({OV,SH,I,close,th,baseA,initAdj,uAdj}){
 }
 function ThemeM({OV,SH,close,th,theme,uTheme}){
   const groups=[['기본 테마',Object.values(THEMES).slice(0,10)],['🎨 패턴 테마',Object.values(THEMES).slice(10)]];
-  // 각 테마 카드에 미니 앱 프리뷰 (헤더 + 가용금액 + 버튼 모습)
-  const MiniPreview=({t})=>(
-    <div style={{background:t.bg,backgroundImage:t.pat||'none',backgroundSize:t.patSz||'auto',borderRadius:10,overflow:'hidden',border:`1px solid ${t.border}`}}>
-      <div style={{background:t.grad,padding:'5px 7px',color:'#fff',fontSize:8,fontWeight:700}}>🏠 홈</div>
-      <div style={{padding:'5px 7px'}}>
-        <div style={{background:t.grad,borderRadius:5,padding:'4px 6px',color:'#fff',fontSize:8,fontWeight:800,marginBottom:3}}>₩ 1,234,567</div>
-        <div style={{display:'flex',gap:3}}>
-          <div style={{flex:1,height:8,background:t.border,borderRadius:3}}/>
-          <div style={{width:14,height:8,background:t.primary,borderRadius:3}}/>
-        </div>
-      </div>
-    </div>
-  );
+  // grad 문자열에서 시작/끝 색상 뽑아 작은 점 표시
+  const extractColors=t=>{
+    const m=(t.grad||'').match(/#[0-9a-fA-F]{6}/g)||[];
+    return{c1:m[0]||t.primary,c2:m[1]||t.light,c3:t.primary,c4:t.light};
+  };
   return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
     <div style={{fontSize:16,fontWeight:700,marginBottom:14,color:th.text}}>🎨 테마 선택 ({Object.keys(THEMES).length}가지)</div>
     {groups.map(([gname,list])=>(
       <div key={gname} style={{marginBottom:14}}>
         <div style={{fontSize:11,color:th.sub,fontWeight:600,marginBottom:8}}>{gname}</div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-          {list.map(t=>(
-            <button key={t.id} onClick={()=>{uTheme(t.id);close();}} style={{border:`2.5px solid ${theme===t.id?t.primary:'transparent'}`,borderRadius:14,padding:'8px',cursor:'pointer',background:'#fff',textAlign:'left',display:'flex',flexDirection:'column',gap:6,boxShadow:theme===t.id?`0 0 0 3px ${t.primary}22`:'none',transition:'all .15s'}}>
-              <MiniPreview t={t}/>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 2px'}}>
-                <div style={{fontSize:11,fontWeight:700,color:'#374151'}}>{t.name}</div>
-                {theme===t.id&&<div style={{fontSize:10,color:t.primary,fontWeight:700}}>✓</div>}
-              </div>
-            </button>
-          ))}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6}}>
+          {list.map(t=>{
+            const {c1,c2,c3,c4}=extractColors(t);
+            const sel=theme===t.id;
+            return(
+              <button key={t.id} onClick={()=>{uTheme(t.id);close();}} style={{border:`2px solid ${sel?t.primary:'#e5e7eb'}`,borderRadius:12,padding:'8px 6px',cursor:'pointer',background:'#fff',display:'flex',flexDirection:'column',gap:6,alignItems:'center',transition:'all .15s',minWidth:0,boxShadow:sel?`0 0 0 3px ${t.primary}20`:'none'}}>
+                <div style={{width:'100%',height:24,borderRadius:8,background:t.grad,backgroundImage:t.pat?`${t.grad},${t.pat}`:t.grad,backgroundSize:t.patSz||'auto'}}/>
+                <div style={{display:'flex',gap:3,width:'100%',justifyContent:'center'}}>
+                  {[c1,c2,c3,c4].map((c,i)=>(<div key={i} style={{width:10,height:10,borderRadius:5,background:c,border:'1px solid rgba(0,0,0,0.05)'}}/>))}
+                </div>
+                <div style={{fontSize:10,fontWeight:sel?800:600,color:'#374151',textAlign:'center',lineHeight:1.2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',width:'100%'}}>{t.name}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
     ))}
