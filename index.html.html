@@ -300,8 +300,10 @@ function _syncNow(){
   BACKUP_KEYS.forEach(k=>{const v=lv(k);if(v!==null&&v!==undefined)payload[k]=v;});
   payload.__updatedAt=FB.serverTimestamp();
   payload.__appVersion=APP_VERSION;
-  return FB.setDoc(FB.doc(FB.db,'users',uid),payload,{merge:true}).then(()=>{
-    // 싱크 성공 — pending 플래그 제거
+  // ★ {merge:true}를 쓰지 않는 이유: Firestore의 merge는 중첩 객체(map 필드)를 재귀 병합하므로
+  // 예: 클라우드 hj9-iv={a,b,c}, 업로드 hj9-iv={a,b} → 결과 {a,b,c} ← c가 안 지워짐
+  // 매번 BACKUP_KEYS + 메타를 모두 payload에 포함하므로 전체 덮어쓰기(no-merge)가 안전함
+  return FB.setDoc(FB.doc(FB.db,'users',uid),payload).then(()=>{
     try{
       localStorage.removeItem('hj9-pendingSync');
       localStorage.setItem('hj9-lastCloudSync',String(Date.now()));
