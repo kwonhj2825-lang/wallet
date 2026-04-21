@@ -211,9 +211,13 @@ function findIvKeyByRole(role,iv,ivCats){
   if(!flag)return null;
   const targetCat=ivCats.find(c=>c[flag]);
   if(!targetCat)return null;
-  // 해당 카테고리에 속한 iv 항목들 중 첫 번째
   const candidates=Object.keys(iv).filter(k=>iv[k]?.cat===targetCat.name);
-  return candidates[0]||null;
+  if(!candidates.length)return null;
+  // 1순위: 항목 이름이 카테고리 이름과 정확히 일치 (예: cat='저금통' → name='저금통' 항목)
+  const exactName=candidates.find(k=>iv[k]?.name===targetCat.name);
+  if(exactName)return exactName;
+  // 2순위: 잔액이 가장 큰 항목 (실사용 자산일 가능성 높음 — 신규 test 항목보다 기존 항목 선호)
+  return candidates.sort((a,b)=>(Number(iv[b]?.current||0))-(Number(iv[a]?.current||0)))[0];
 }
 // ★ 자동연동: 거래 t가 추가/삭제될 때 iv 잔액 조정
 // base: 현재 iv 객체. 반환값: 갱신된 iv 객체
