@@ -178,38 +178,41 @@ const THEMES={
 const FX0=[];
 // payDay: null=월급일(기본), 숫자=매달 해당 날짜에 출금
 const IV0={};
-const CATS_I=[{id:1,name:'식비',icon:'🍚'},{id:2,name:'카페',icon:'☕'},{id:3,name:'쇼핑',icon:'🛍️'},{id:4,name:'교통',icon:'🚇'},{id:5,name:'구독',icon:'📱'},{id:6,name:'생활비',icon:'🏠'},{id:7,name:'문화',icon:'🎬'},{id:8,name:'의료',icon:'💊'},{id:9,name:'파킹통장',icon:'💳',role:'parking'},{id:10,name:'저금통',icon:'🐷',role:'jar'},{id:11,name:'기타',icon:'📦'}];
+const CATS_I=[{id:1,name:'식비',icon:'🍚'},{id:2,name:'카페',icon:'☕'},{id:3,name:'쇼핑',icon:'🛍️'},{id:4,name:'교통',icon:'🚇'},{id:5,name:'구독',icon:'📱'},{id:6,name:'생활비',icon:'🏠'},{id:7,name:'문화',icon:'🎬'},{id:8,name:'의료',icon:'💊'},{id:9,name:'파킹통장',icon:'💳',ivCatId:'parking'},{id:10,name:'저금통',icon:'🐷',ivCatId:'jar'},{id:11,name:'기타',icon:'📦'}];
 const INC_I=[{id:101,name:'월급',icon:'💰'},{id:102,name:'이체',icon:'💸'},{id:106,name:'기타',icon:'📦'}];
 const FX_CATS_I=['구독','주거','보험','통신','교통','저축','생활비','기타'];
-// 투자 카테고리: id로 연결, 플래그로 특수 역할 표시
-// isWedding: 목표 자금 카테고리 (홈/자산의 목표 달성률)
-// isParking: 지출 카테고리 "파킹통장"과 자동 연동 (지출→잔액+, 수입→잔액-)
-// isJar: 지출 카테고리 "저금통"과 자동 연동
+// 투자 카테고리: id로 연결, isWedding 플래그로 목표자금 카테고리 표시
+// 연결은 cats/incCats의 ivCatId 필드를 통해 이루어짐 (어떤 iv 카테고리든 연결 가능)
 const IV_CATS_I=[
-  {id:'savings',name:'적금',icon:'🏦',isWedding:false,isParking:false,isJar:false},
-  {id:'parking',name:'파킹통장',icon:'💳',isWedding:false,isParking:true,isJar:false},
-  {id:'jar',name:'저금통',icon:'🐷',isWedding:false,isParking:false,isJar:true},
+  {id:'savings',name:'적금',icon:'🏦',isWedding:false},
+  {id:'parking',name:'파킹통장',icon:'💳',isWedding:false},
+  {id:'jar',name:'저금통',icon:'🐷',isWedding:false},
 ];
 const CC=['#a78bfa','#f9a8d4','#86efac','#7dd3fc','#fde68a','#fca5a5','#6ee7b7','#fbbf24','#c4b5fd','#94a3b8'];
-// 소비 통계에서 제외할 카테고리
-const STATS_EXCL=new Set(['투자','저금통']);
 
-// ★ 지출/수입 카테고리 이름으로 role 찾기 (하위호환 포함)
-// 기존 데이터(role 없이 저장된 것)도 이름이 '파킹통장'/'저금통'이면 role로 인식
-function findRole(catName,catsList,incCatsList){
-  const found=[...catsList,...incCatsList].find(c=>c.name===catName);
-  if(found?.role)return found.role;
-  // 하위호환: 이름이 '파킹통장'이면 parking, '저금통'이면 jar
-  if(catName==='파킹통장')return'parking';
-  if(catName==='저금통')return'jar';
+// ★ 지출/수입 카테고리에 연결된 투자/자산 카테고리 객체 찾기
+// 기존 데이터(role 없이 저장된 것)도 하위호환으로 인식
+function findLinkedIvCat(catName,catsList,incCatsList,ivCats){
+  const found=[...(catsList||[]),...(incCatsList||[])].find(c=>c.name===catName);
+  if(!found)return null;
+  if(found.ivCatId){
+    const ic=ivCats.find(c=>c.id===found.ivCatId);
+    if(ic)return ic;
+  }
+  // 하위호환: legacy role
+  if(found.role==='parking'){
+    return ivCats.find(c=>c.isParking)||ivCats.find(c=>c.name==='파킹통장')||null;
+  }
+  if(found.role==='jar'){
+    return ivCats.find(c=>c.isJar)||ivCats.find(c=>c.name==='저금통')||null;
+  }
+  // 하위호환: 이름이 '파킹통장'/'저금통'이면 자동 매칭
+  if(catName==='파킹통장')return ivCats.find(c=>c.isParking)||ivCats.find(c=>c.name==='파킹통장')||null;
+  if(catName==='저금통')return ivCats.find(c=>c.isJar)||ivCats.find(c=>c.name==='저금통')||null;
   return null;
 }
-// ★ role에 해당하는 투자 카테고리(isParking/isJar 플래그)의 첫 번째 iv 항목 key 찾기
-function findIvKeyByRole(role,iv,ivCats){
-  if(!role)return null;
-  const flag=role==='parking'?'isParking':role==='jar'?'isJar':null;
-  if(!flag)return null;
-  const targetCat=ivCats.find(c=>c[flag]);
+// ★ 투자 카테고리 객체에 해당하는 첫 번째 iv 항목 key 찾기
+function findIvKeyForCat(targetCat,iv){
   if(!targetCat)return null;
   const candidates=Object.keys(iv).filter(k=>iv[k]?.cat===targetCat.name);
   if(!candidates.length)return null;
@@ -259,18 +262,14 @@ function applyIvAutoGrow(ivObj,today,primaryDay){
 }
 
 function applyAcct(t,sign,base,cats,incCats,ivCats){
-  const role=findRole(t.cat,cats,incCats);
-  if(!role)return base;
-  const flag=role==='parking'?'isParking':role==='jar'?'isJar':null;
-  if(!flag)return base;
-  const targetCat=ivCats.find(c=>c[flag]);
+  const targetCat=findLinkedIvCat(t.cat,cats,incCats,ivCats);
   if(!targetCat)return base;
   let newBase=base;
-  let key=findIvKeyByRole(role,base,ivCats);
+  let key=findIvKeyForCat(targetCat,base);
   // 매칭되는 iv 항목이 없으면 자동 생성 (예: 저금통 카테고리 첫 지출 시 자산 저금통 자동 만들어줌)
   if(!key){
-    key='iv_auto_'+role;
-    newBase={...base,[key]:{name:targetCat.name,current:0,monthly:0,ic:targetCat.icon||'🐷',cat:targetCat.name,payDay:null,fromCash:true}};
+    key='iv_auto_'+targetCat.id;
+    newBase={...base,[key]:{name:targetCat.name,current:0,monthly:0,ic:targetCat.icon||'💰',cat:targetCat.name,payDay:null,fromCash:true}};
   }
   const d=sign*(t.tp==='exp'?t.amt:-t.amt);
   return{...newBase,[key]:{...newBase[key],current:(newBase[key].current||0)+d}};
@@ -503,25 +502,27 @@ function App(){
       loadedIvCats=[...loadedIvCats,{id:'jar',name:'저금통',icon:'🐷',isWedding:false,isParking:false,isJar:true}];
     }
     setIvCats(loadedIvCats);
+    // 카테고리 마이그레이션: legacy role/이름 → ivCatId (iv 카테고리 객체의 id 직접 참조)
+    const migrateCatLink=c=>{
+      if(c.ivCatId){
+        // 이미 ivCatId가 있으면 유효한지 검증 (iv cat 삭제되면 자동 해제)
+        if(loadedIvCats.some(x=>x.id===c.ivCatId))return c;
+        const {ivCatId,...rest}=c;return rest;
+      }
+      let linked=null;
+      if(c.role==='parking')linked=loadedIvCats.find(x=>x.isParking)||loadedIvCats.find(x=>x.name==='파킹통장');
+      else if(c.role==='jar')linked=loadedIvCats.find(x=>x.isJar)||loadedIvCats.find(x=>x.name==='저금통');
+      else if(c.name==='파킹통장')linked=loadedIvCats.find(x=>x.isParking)||loadedIvCats.find(x=>x.name==='파킹통장');
+      else if(c.name==='저금통')linked=loadedIvCats.find(x=>x.isJar)||loadedIvCats.find(x=>x.name==='저금통');
+      return linked?{...c,ivCatId:linked.id}:c;
+    };
     const scats=lv('hj9-cats');
     if(scats&&Array.isArray(scats)){
-      const migrated=scats.map(c=>{
-        if(c.role)return c;
-        if(c.name==='파킹통장')return{...c,role:'parking'};
-        if(c.name==='저금통')return{...c,role:'jar'};
-        return c;
-      });
-      setCats(migrated);
+      setCats(scats.map(migrateCatLink));
     }
     const sincCats=lv('hj9-incCats');
     if(sincCats&&Array.isArray(sincCats)){
-      const migrated=sincCats.map(c=>{
-        if(c.role)return c;
-        if(c.name==='파킹통장')return{...c,role:'parking'};
-        if(c.name==='저금통')return{...c,role:'jar'};
-        return c;
-      });
-      setIncCats(migrated);
+      setIncCats(sincCats.map(migrateCatLink));
     }
     const sfx=lv('hj9-fx');if(sfx)setFx(sfx.map(f=>({...f,df:f.df||f.deletedFrom||null})));
     const sfxin=lv('hj9-fxin');
@@ -897,12 +898,14 @@ function App(){
 }
 
 // ── 홈 탭 ─────────────────────────────────────────────────────
-function HomeTab({curSal,fxSum,ivDed,baseA,avail,spnt,incd,spPct,creditPending,billingLabel,wFund,tAss,wg,wgUnset,dLeft,dayB,needMo,saveGap,mLeft,pTx,iv,setModal,getIcon,th,wedKeys,ivCats,wedCatName,setTab,bkTick,lastAssetCheck,uLastAssetCheck,creditLocked,creditUpcoming,creditLockedBillLabel,creditUpcomingBillLabel}){
+function HomeTab({curSal,fxSum,ivDed,baseA,avail,spnt,incd,spPct,creditPending,billingLabel,wFund,tAss,wg,wgUnset,dLeft,dayB,needMo,saveGap,mLeft,pTx,iv,setModal,getIcon,th,wedKeys,ivCats,wedCatName,setTab,bkTick,lastAssetCheck,uLastAssetCheck,creditLocked,creditUpcoming,creditLockedBillLabel,creditUpcomingBillLabel,cats,incCats}){
   const wPct=wgUnset?0:Math.min(100,(wFund/wg.target)*100);
   const wgName=wg.name||'목표자금';
   const todayTx=pTx.filter(t=>t.date===TODAY);
   const todaySpnt=todayTx.filter(t=>t.tp==='exp'&&t.payType!=='biz').reduce((s,t)=>s+t.amt,0);
-  const byCat={};pTx.filter(t=>t.tp==='exp'&&t.payType!=='biz'&&t.cat!=='저금통'&&t.cat!=='파킹통장').forEach(t=>{byCat[t.cat]=(byCat[t.cat]||0)+t.amt;});
+  // 연결 계정이 있는 지출 카테고리는 "소비"가 아니라 저축 이동이므로 통계에서 제외
+  const linkedExpenseNames=new Set((cats||[]).filter(c=>c.ivCatId).map(c=>c.name));
+  const byCat={};pTx.filter(t=>t.tp==='exp'&&t.payType!=='biz'&&!linkedExpenseNames.has(t.cat)).forEach(t=>{byCat[t.cat]=(byCat[t.cat]||0)+t.amt;});
   const topCats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,4);
   const wgLabel=wgUnset?'미설정':`${wg.year}년 ${wg.month||12}월`;
   // 목표 자금 카테고리 정보 (아이콘/이름 동적 표시)
@@ -1116,12 +1119,14 @@ function LedgerTab({txns,delTx,updateTx,setModal,th,fx,fxOv,curSal,salOv,salMK,u
   const cyTxInc=cyTxns.filter(t=>t.tp==='inc').reduce((s,t)=>s+t.amt,0);
   const cyTotalExp=cyTxExp+cyFxTotal+ivTotal;
   const cyTotalInc=cyTxInc+cycSal;
-  // ★ 순 소비: 고정지출·투자·법인카드 제외, 현금+신용카드만
-  const cyPersonalSpnt=cyTxns.filter(t=>t.tp==='exp'&&t.payType!=='biz'&&t.cat!=='저금통').reduce((s,t)=>s+t.amt,0);
+  // 연결 계정이 있는 지출 카테고리는 "소비"가 아니라 저축 이동이므로 통계에서 제외
+  const linkedExpenseNames=new Set((cats||[]).filter(c=>c.ivCatId).map(c=>c.name));
+  // ★ 순 소비: 고정지출·투자·법인카드 제외, 현금+신용카드만 (자동연동 지출도 제외)
+  const cyPersonalSpnt=cyTxns.filter(t=>t.tp==='exp'&&t.payType!=='biz'&&!linkedExpenseNames.has(t.cat)).reduce((s,t)=>s+t.amt,0);
 
-  // ★ 소비 통계 (투자/저금통 제외, 고정비용 toggle)
+  // ★ 소비 통계 (연결 계정 카테고리 제외, 고정비용 toggle)
   const statsTxByCat={};
-  cyTxns.filter(t=>t.tp==='exp'&&!STATS_EXCL.has(t.cat)).forEach(t=>{statsTxByCat[t.cat]=(statsTxByCat[t.cat]||0)+t.amt;});
+  cyTxns.filter(t=>t.tp==='exp'&&!linkedExpenseNames.has(t.cat)).forEach(t=>{statsTxByCat[t.cat]=(statsTxByCat[t.cat]||0)+t.amt;});
   const statsMap=statsFx?{...cyFxByCat,...statsTxByCat}:{...statsTxByCat};
   const statsTotal=Object.values(statsMap).reduce((s,v)=>s+v,0);
 
@@ -1236,7 +1241,7 @@ function LedgerTab({txns,delTx,updateTx,setModal,th,fx,fxOv,curSal,salOv,salMK,u
       {hasAny&&(<div style={{borderTop:`1px solid ${th.border}`,paddingTop:8,marginTop:4,display:'flex',justifyContent:'space-between',fontSize:11,fontWeight:700}}><span style={{color:'#dc2626'}}>지출 -{won(selTxExp+selFxTotal+(showFx?selInvTotal:0))}</span><span style={{color:th.green}}>수입 +{won(selTxInc+(showSal?selFxInTotal:0))}</span></div>)}
     </div>
 
-    {/* ★ 소비 통계 - 투자/저금통 제외, 고정비용 toggle */}
+    {/* ★ 소비 통계 - 연결 계정 카테고리 제외, 고정비용 toggle */}
     <div style={Cd(th)}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
         <div style={{fontSize:12,fontWeight:700,color:th.text}}>📊 {cycle.label} 소비 통계</div>
@@ -1343,11 +1348,22 @@ function FixedTab({fx,fxSum,uFx,fxIn,uFxIn,setModal,fxCats,th}){
 }
 
 // ── 자산 탭 ─────────────────────────────────────────────────
-function AssetsTab({iv,wFund,tAss,uIv,setModal,wg,wgUnset,uWg,needMo,mLeft,th,wedKeys,ivCats,wedCatName}){
+function AssetsTab({iv,wFund,tAss,uIv,setModal,wg,wgUnset,uWg,needMo,mLeft,th,wedKeys,ivCats,wedCatName,cats,incCats}){
   const wPct=wgUnset?0:Math.min(100,(wFund/wg.target)*100);
   const wgLabel=wgUnset?'미설정':`${wg.year}년 ${wg.month||12}월`;
   const wgName=wg.name||'목표자금';
   const wedIcon=ivCats.find(c=>c.isWedding)?.icon||'💍';
+  // 어떤 iv 카테고리에 연결된 지출/수입 카테고리(이름) 목록을 미리 계산
+  const linkedFromCats=React.useMemo(()=>{
+    const m={};
+    [...(cats||[]),...(incCats||[])].forEach(c=>{
+      if(c.ivCatId){
+        if(!m[c.ivCatId])m[c.ivCatId]=[];
+        m[c.ivCatId].push(c.name);
+      }
+    });
+    return m;
+  },[cats,incCats]);
   // 카테고리별 그룹핑 (ivCats 순서대로, 마지막에 "알 수 없음" 카테고리)
   const ivEntries=Object.entries(iv);
   const byCat={};
@@ -1389,12 +1405,15 @@ function AssetsTab({iv,wFund,tAss,uIv,setModal,wg,wgUnset,uWg,needMo,mLeft,th,we
     {/* ★ 카테고리별 항목 리스트 */}
     {orderedCats.map(catName=>{
       const catObj=getCatObj(catName);
+      const linkedCatNames=catObj.id?(linkedFromCats[catObj.id]||[]):[];
+      const isLinked=linkedCatNames.length>0;
       return(
       <div key={catName} style={Cd(th)}>
-        <div style={{fontSize:11,fontWeight:700,color:th.sub,marginBottom:8}}>{catObj.icon} {catName}</div>
+        <div style={{fontSize:11,fontWeight:700,color:th.sub,marginBottom:8,display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+          <span>{catObj.icon} {catName}</span>
+          {isLinked&&<span style={{fontSize:9,color:th.primary,background:`${th.primary}15`,borderRadius:6,padding:'2px 6px',fontWeight:700}}>🔗 {linkedCatNames.join(', ')}</span>}
+        </div>
         {byCat[catName].map(([k,item])=>{
-          const isParking=catName==='파킹';
-          const isJar=catName==='저금통';
           return(
           <div key={k} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderBottom:`1px solid ${th.border}`}}>
             <div style={{width:40,height:40,borderRadius:14,background:th.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{item.ic||'💰'}</div>
@@ -1403,10 +1422,10 @@ function AssetsTab({iv,wFund,tAss,uIv,setModal,wg,wgUnset,uWg,needMo,mLeft,th,we
                 <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.name}</span>
                 {item.fromCash===false&&<span style={{fontSize:9,color:'#059669',background:'#d1fae5',borderRadius:6,padding:'1px 5px',fontWeight:700,flexShrink:0}}>✨ 계좌 밖</span>}
               </div>
-              <div style={{fontSize:10,color:th.sub}}>{item.monthly>0?`월 ${won(item.monthly)} · ${item.payDay==null?'월급일':`매월 ${item.payDay}일`} ${item.fromCash===false?'적립':'출금'}`:isParking?'지출 선택시 자동 연동':isJar?'지출→저금 / 수입→인출':'—'}</div>
+              <div style={{fontSize:10,color:th.sub}}>{item.monthly>0?`월 ${won(item.monthly)} · ${item.payDay==null?'월급일':`매월 ${item.payDay}일`} ${item.fromCash===false?'적립':'출금'}`:isLinked?`지출→${catName} 이동 / 수입→인출`:'—'}</div>
             </div>
             <div style={{textAlign:'right',flexShrink:0}}>
-              <div style={{fontSize:14,fontWeight:800,color:catObj.isWedding?th.primary:isParking?th.green:isJar?'#f472b6':th.primary}}>{won(item.current)}</div>
+              <div style={{fontSize:14,fontWeight:800,color:catObj.isWedding?th.primary:isLinked?th.green:th.primary}}>{won(item.current)}</div>
               <div style={{display:'flex',gap:4,marginTop:2,justifyContent:'flex-end'}}>
                 <button onClick={()=>setModal({type:'iv',key:k})} style={{border:'none',background:th.border,borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:th.primary,fontWeight:600}}>수정</button>
                 <button onClick={()=>handleDel(k)} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'4px 8px',fontSize:10,cursor:'pointer',color:'#dc2626',fontWeight:600}}>삭제</button>
@@ -1553,7 +1572,7 @@ function Modals(props){
   const I={width:'100%',border:`2px solid ${th.border}`,borderRadius:12,padding:'12px 14px',boxSizing:'border-box',outline:'none',fontFamily:'inherit',background:th.card,color:th.text,display:'block'};
   const p={OV,SH,I,close,th};
   if(modal.type==='appName')return <AppNameM {...p} appName={appName} uAppName={uAppName}/>;
-  if(modal.type==='txn')return <TxM {...p} addTx={addTx} updateTx={updateTx} delTx={delTx} editTx={modal.editTx} initDate={modal.data?.date} cats={cats} incCats={incCats}/>;
+  if(modal.type==='txn')return <TxM {...p} addTx={addTx} updateTx={updateTx} delTx={delTx} editTx={modal.editTx} initDate={modal.data?.date} cats={cats} incCats={incCats} ivCats={ivCats}/>;
   if(modal.type==='fx')return <FxM {...p} fx={fx} uFx={uFx} item={modal.data} fxCats={fxCats}/>;
   if(modal.type==='fxIn')return <FxInM {...p} fxIn={fxIn||[]} uFxIn={uFxIn} fxInOv={fxInOv||{}} uFxInOv={uFxInOv} item={modal.data}/>;
   if(modal.type==='fxInOv')return <FxInOvM {...p} fxInId={modal.fxInId} fxInName={modal.fxInName} defaultAmt={modal.defaultAmt} monthKey={modal.monthKey} fxInOv={fxInOv||{}} uFxInOv={uFxInOv}/>;
@@ -1563,14 +1582,14 @@ function Modals(props){
   if(modal.type==='adj')return <AdjM {...p} baseA={baseA} initAdj={initAdj} uAdj={uAdj}/>;
   if(modal.type==='fxmonth')return <FxMonthM {...p} fxId={modal.fxId} fxName={modal.fxName} fxDefaultDay={modal.fxDefaultDay} fxDefaultAmt={modal.fxDefaultAmt} monthKey={modal.monthKey} fxOv={fxOv} uFxOv={uFxOv}/>;
   if(modal.type==='ivOv')return <IvOvM {...p} iv={iv} ivOv={ivOv} uIvOv={uIvOv} ivKey={modal.ivKey} ivName={modal.ivName} monthKey={modal.monthKey} defaultAmt={modal.defaultAmt}/>;
-  if(modal.type==='catEdit')return <CatEditM {...p} cat={modal.cat} onSave={modal.onSave}/>;
+  if(modal.type==='catEdit')return <CatEditM {...p} cat={modal.cat} onSave={modal.onSave} ivCats={ivCats}/>;
   if(modal.type==='fxCatEdit')return <FxCatEditM {...p} cat={modal.cat} idx={modal.idx} fxCats={fxCats} uFxCats={uFxCats}/>;
   if(modal.type==='ivCatEdit')return <IvCatEditM {...p} cat={modal.cat} ivCats={ivCats} uIvCats={uIvCats}/>;
   return null;
 }
 
 
-function TxM({OV,SH,I,close,th,addTx,updateTx,delTx,editTx,initDate,cats,incCats}){
+function TxM({OV,SH,I,close,th,addTx,updateTx,delTx,editTx,initDate,cats,incCats,ivCats}){
   const isEdit=!!editTx;
   const[tp,setTp]=useState(editTx?.tp||'exp');
   const[amt,setAmt]=useState(editTx?.amt||0);
@@ -1580,8 +1599,8 @@ function TxM({OV,SH,I,close,th,addTx,updateTx,delTx,editTx,initDate,cats,incCats
   const[payType,setPayType]=useState(editTx?.payType||'cash');
   const iCats=tp==='exp'?cats:incCats;
   const save=()=>{if(!amt||Number(amt)<=0)return;const t={...(editTx||{}),id:editTx?.id||uid(),date,tp,amt:Number(amt),cat,memo,payType:tp==='exp'?payType:'cash'};isEdit?updateTx(t):addTx(t);close();};
-  const acctRole=findRole(cat,cats,incCats);
-  const tipMsg=acctRole==='jar'?'🐷 지출→저금통 이동 / 수입→인출':acctRole==='parking'?'💳 지출→파킹 이동 / 수입→인출':null;
+  const linkedIv=findLinkedIvCat(cat,cats,incCats,ivCats||[]);
+  const tipMsg=linkedIv?`${linkedIv.icon||'🔗'} 지출→${linkedIv.name} 이동 / 수입→인출`:null;
   return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}><div style={{fontSize:16,fontWeight:700,color:th.text}}>{isEdit?'✏️ 내역 수정':'➕ 내역 추가'}</div>{isEdit&&<button onClick={()=>{if(!confirm(`이 거래 내역을 삭제할까요?\n${editTx.date} · ${editTx.cat} · ${won(editTx.amt)}`))return;delTx(editTx.id);close();}} style={{border:'none',background:'#fef2f2',borderRadius:8,padding:'5px 10px',fontSize:11,cursor:'pointer',color:'#dc2626',fontWeight:600}}>🗑 삭제</button>}</div>
     <div style={{display:'flex',gap:8,marginBottom:12}}>{[['exp','💸 지출'],['inc','💰 수입']].map(([v,lb])=>(<button key={v} onClick={()=>{setTp(v);if(!isEdit)setCat((v==='exp'?cats:incCats)[0]?.name||'기타');}} style={{flex:1,border:'none',borderRadius:12,padding:'10px',fontSize:12,fontWeight:700,cursor:'pointer',background:tp===v?th.primary:th.border,color:tp===v?'#fff':th.sub}}>{lb}</button>))}</div>
@@ -1603,26 +1622,34 @@ function TxM({OV,SH,I,close,th,addTx,updateTx,delTx,editTx,initDate,cats,incCats
   </div></div>);
 }
 
-function CatEditM({OV,SH,I,close,th,cat,onSave}){
+function CatEditM({OV,SH,I,close,th,cat,onSave,ivCats}){
   const[name,setName]=useState(cat?.name||'');
   const[icon,setIcon]=useState(cat?.icon||'📦');
-  const[role,setRole]=useState(cat?.role||'');
+  // 기존 데이터 마이그레이션: ivCatId 우선, 없으면 legacy role/이름으로부터 추론
+  const initialIvCatId=(()=>{
+    if(cat?.ivCatId&&ivCats?.some(c=>c.id===cat.ivCatId))return cat.ivCatId;
+    if(cat?.role==='parking')return(ivCats?.find(c=>c.isParking)||ivCats?.find(c=>c.name==='파킹통장'))?.id||'';
+    if(cat?.role==='jar')return(ivCats?.find(c=>c.isJar)||ivCats?.find(c=>c.name==='저금통'))?.id||'';
+    return'';
+  })();
+  const[ivCatId,setIvCatId]=useState(initialIvCatId);
+  const linked=ivCatId?ivCats?.find(c=>c.id===ivCatId):null;
   return(<div style={OV} onClick={close}><div style={SH} onClick={e=>e.stopPropagation()}>
     <div style={{fontSize:16,fontWeight:700,marginBottom:16,color:th.text}}>{cat?'✏️ 카테고리 수정':'➕ 카테고리 추가'}</div>
     <div style={{display:'flex',gap:10,marginBottom:10}}>
       <div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>아이콘</div><input value={icon} onChange={e=>setIcon(e.target.value)} style={{...I,textAlign:'center'}} placeholder="🍚"/></div>
       <div style={{flex:3}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>이름</div><input value={name} onChange={e=>setName(e.target.value)} placeholder="카테고리명" style={I}/></div>
     </div>
-    {/* ★ 연결 계정: 파킹/저금통 자동연동 */}
+    {/* ★ 연결 계정: 모든 투자/자산 카테고리에서 선택 가능 */}
     <div style={{fontSize:11,color:th.sub,marginBottom:6}}>🔗 연결 계정 (선택)</div>
     <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,marginBottom:10}}>
-      {[['','없음'],['parking','💳 파킹'],['jar','🐷 저금통']].map(([v,lb])=>(
-        <button key={v} onClick={()=>setRole(v)} style={{border:'none',borderRadius:10,padding:'8px 4px',fontSize:11,cursor:'pointer',background:role===v?th.primary:th.border,color:role===v?'#fff':th.text,fontWeight:600}}>{lb}</button>
+      <button onClick={()=>setIvCatId('')} style={{border:'none',borderRadius:10,padding:'8px 4px',fontSize:11,cursor:'pointer',background:!ivCatId?th.primary:th.border,color:!ivCatId?'#fff':th.text,fontWeight:600}}>없음</button>
+      {(ivCats||[]).map(ic=>(
+        <button key={ic.id} onClick={()=>setIvCatId(ic.id)} style={{border:'none',borderRadius:10,padding:'8px 4px',fontSize:11,cursor:'pointer',background:ivCatId===ic.id?th.primary:th.border,color:ivCatId===ic.id?'#fff':th.text,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{ic.icon} {ic.name}</button>
       ))}
     </div>
-    {role&&<div style={{fontSize:10,color:th.primary,background:`${th.primary}15`,borderRadius:8,padding:'6px 10px',marginBottom:10,lineHeight:1.5}}>{role==='parking'?'💳 이 카테고리로 지출하면 자동으로 "파킹" 분류 투자 항목의 잔액이 늘어나요. 수입이면 반대로 줄어요.':'🐷 이 카테고리로 지출하면 자동으로 "저금통" 분류 투자 항목의 잔액이 늘어나요. 수입이면 반대로 줄어요.'}</div>}
-    <div style={{fontSize:11,color:th.sub,background:th.border,borderRadius:8,padding:'8px 12px',marginBottom:14,lineHeight:2}}>💡 이모지 예시: 🍚☕🛍️🚇📱🏠🎬💊💳🐷📦💰💸✈️🎮💄🐕🎵</div>
-    <button onClick={()=>{if(!name.trim())return;onSave({name:name.trim(),icon:icon.trim()||'📦',role:role||undefined});close();}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>{cat?'저장':'추가'}</button>
+    {linked&&<div style={{fontSize:10,color:th.primary,background:`${th.primary}15`,borderRadius:8,padding:'6px 10px',marginBottom:14,lineHeight:1.5}}>{linked.icon} 이 카테고리로 지출하면 자동으로 "{linked.name}" 분류 투자 항목의 잔액이 늘어나요. 수입이면 반대로 줄어요.</div>}
+    <button onClick={()=>{if(!name.trim())return;onSave({name:name.trim(),icon:icon.trim()||'📦',ivCatId:ivCatId||undefined,role:undefined});close();}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>{cat?'저장':'추가'}</button>
   </div></div>);
 }
 
@@ -1643,7 +1670,6 @@ function FxCatEditM({OV,SH,I,close,th,cat,idx,fxCats,uFxCats}){
       <div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>아이콘</div><input value={ic} onChange={e=>setIc(e.target.value)} style={{...I,textAlign:'center'}} placeholder="📌"/></div>
       <div style={{flex:3}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>이름</div><input value={v} onChange={e=>setV(e.target.value)} placeholder="카테고리명" style={I}/></div>
     </div>
-    <div style={{fontSize:11,color:th.sub,background:th.border,borderRadius:8,padding:'8px 12px',marginBottom:14,lineHeight:2}}>💡 아이콘 예시: 📱🏠🛡️📡🚌🏦🛒📦🏥🎬✈️</div>
     <button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>{cat?'저장':'추가'}</button>
   </div></div>);
 }
@@ -1654,37 +1680,24 @@ function IvCatEditM({OV,SH,I,close,th,cat,ivCats,uIvCats}){
   const[name,setName]=useState(cat?.name||'');
   const[icon,setIcon]=useState(cat?.icon||'📊');
   const[isWed,setIsWed]=useState(cat?.isWedding||false);
-  const[isPark,setIsPark]=useState(cat?.isParking||false);
-  const[isJar,setIsJar]=useState(cat?.isJar||false);
   const save=()=>{
     if(!name.trim())return;
     const trimmedName=name.trim();
-    // 같은 이름이 이미 존재하는지 체크 (자기 자신 제외)
     if(ivCats.some(c=>c.name===trimmedName&&c.id!==cat?.id)){
       alert('같은 이름의 카테고리가 이미 있어요.');
       return;
     }
-    // 각 플래그는 한 카테고리만 — true로 설정하면 다른 것들은 false로
     let newList;
-    const buildUpdate=()=>({name:trimmedName,icon:icon.trim()||'📊',isWedding:isWed,isParking:isPark,isJar});
+    const buildUpdate=()=>({name:trimmedName,icon:icon.trim()||'📊',isWedding:isWed});
     if(isNew){
       const newCat={id:'iv_'+uid(),...buildUpdate()};
-      newList=ivCats.map(c=>({...c,
-        isWedding:isWed?false:c.isWedding,
-        isParking:isPark?false:c.isParking,
-        isJar:isJar?false:c.isJar,
-      })).concat(newCat);
+      newList=ivCats.map(c=>({...c,isWedding:isWed?false:c.isWedding})).concat(newCat);
     }else{
       newList=ivCats.map(c=>{
         if(c.id===cat.id)return{...c,...buildUpdate()};
-        return{...c,
-          isWedding:isWed?false:c.isWedding,
-          isParking:isPark?false:c.isParking,
-          isJar:isJar?false:c.isJar,
-        };
+        return{...c,isWedding:isWed?false:c.isWedding};
       });
     }
-    // 최소한 하나의 isWedding=true는 유지되도록 보장
     if(!newList.some(c=>c.isWedding)&&newList.length>0){
       newList[0]={...newList[0],isWedding:true};
     }
@@ -1695,14 +1708,12 @@ function IvCatEditM({OV,SH,I,close,th,cat,ivCats,uIvCats}){
     if(ivCats.length<=1){alert('카테고리는 최소 1개는 있어야 해요.');return;}
     if(!confirm(`'${cat.name}' 카테고리를 삭제할까요? 이 분류의 항목들은 자동으로 다른 카테고리로 이동돼요.`))return;
     let newList=ivCats.filter(c=>c.id!==cat.id);
-    // 목표 자금 카테고리를 지우면 첫 번째를 목표로 승격
     if(cat.isWedding&&newList.length>0){
       newList[0]={...newList[0],isWedding:true};
     }
     uIvCats(newList);
     close();
   };
-  // 체크박스 행 컴포넌트
   const FlagRow=({checked,onChange,label,desc,emoji})=>(
     <label style={{display:'flex',alignItems:'center',gap:10,cursor:'pointer',padding:'10px 12px',background:checked?`${th.primary}15`:th.border,borderRadius:12,border:`1.5px solid ${checked?th.primary:'transparent'}`,marginBottom:6}}>
       <input type="checkbox" checked={checked} onChange={e=>onChange(e.target.checked)} style={{width:18,height:18,accentColor:th.primary,cursor:'pointer'}}/>
@@ -1721,11 +1732,8 @@ function IvCatEditM({OV,SH,I,close,th,cat,ivCats,uIvCats}){
       <div style={{flex:1}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>아이콘</div><input value={icon} onChange={e=>setIcon(e.target.value)} style={{...I,textAlign:'center'}} placeholder="📊"/></div>
       <div style={{flex:3}}><div style={{fontSize:11,color:th.sub,marginBottom:4}}>이름</div><input value={name} onChange={e=>setName(e.target.value)} placeholder="예: 결혼자금, 내집마련, 노후준비" style={I}/></div>
     </div>
-    <div style={{fontSize:11,color:th.sub,marginBottom:6}}>🏷️ 특수 역할 (선택)</div>
-    <FlagRow checked={isWed} onChange={setIsWed} emoji="🎯" label="목표 자금" desc="이 카테고리 합계가 홈/자산 탭의 목표 달성률에 반영돼요"/>
-    <FlagRow checked={isPark} onChange={setIsPark} emoji="💳" label="파킹 계좌" desc='지출 카테고리 "파킹통장"과 자동 연동돼요 (한 카테고리만 지정 가능)'/>
-    <FlagRow checked={isJar} onChange={setIsJar} emoji="🐷" label="저금통" desc='지출 카테고리 "저금통"과 자동 연동돼요 (한 카테고리만 지정 가능)'/>
-    <div style={{fontSize:10,color:th.sub,background:th.border,borderRadius:8,padding:'8px 12px',margin:'8px 0 14px',lineHeight:1.7}}>💡 각 역할은 한 번에 한 카테고리만 가질 수 있어요. 다른 카테고리에 있었다면 자동으로 해제됩니다.</div>
+    <FlagRow checked={isWed} onChange={setIsWed} emoji="🎯" label="목표 자금" desc="이 카테고리 합계가 홈/자산 탭의 목표 달성률에 반영돼요 (한 카테고리만 지정 가능)"/>
+    <div style={{fontSize:10,color:th.sub,background:th.border,borderRadius:8,padding:'8px 12px',margin:'8px 0 14px',lineHeight:1.7}}>💡 지출/수입 카테고리와의 자동 연동은 <b>설정 → 지출/수입 카테고리 → 카테고리 수정</b>에서 "🔗 연결 계정"으로 설정해요. 카테고리 이름을 바꿔도 연결은 그대로 유지돼요.</div>
     <button onClick={save} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:13,fontWeight:700,cursor:'pointer'}}>{isNew?'추가':'저장'}</button>
   </div></div>);
 }
