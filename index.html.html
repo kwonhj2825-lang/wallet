@@ -372,10 +372,16 @@ if(PREVIEW_MODE){
     sessionStorage.removeItem('fb-synced-uid');
   }catch(e){}
 }
+// ── 긴급 복구 모드: ?norestore=1 로 접속 (데이터 손실 복구용) ──
+// - 클라우드 자동 다운로드/업로드 모두 차단 (localStorage 안 건드림)
+// - 화면 상단에 큰 "🚨 로컬 백업 즉시 다운로드" 버튼 노출 → 현재 기기 localStorage의 hj9-* 키 전부를 JSON으로 다운로드
+// - 사용자는 받은 JSON을 안전한 곳에 보관 → 추후 복원 가능
+const RECOVER_MODE=(()=>{try{return new URLSearchParams(location.search).get('norestore')==='1';}catch(e){return false;}})();
 // 유니크 ID 생성 (같은 밀리초 연속 생성 충돌 방지)
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const sv=(k,v)=>{
   if(PREVIEW_MODE)return; // 미리보기 모드에서는 저장/싱크 안 함
+  if(RECOVER_MODE)return; // 긴급 복구 모드 — localStorage 보호 (절대 쓰기 금지)
   try{
     localStorage.setItem(k,JSON.stringify(v));
     // 동기화 미완료 플래그 세우기 — 로그인 핸들러에서 다음 세션 pending 감지용
@@ -460,6 +466,9 @@ function importBackup(data){
     if(typeof v!=='string')return;
     try{JSON.parse(v);localStorage.setItem(k,v);count++;}catch(e){}
   });
+  // ★ 복원 직후 pendingSync 세팅 → 다음 로그인/sync 시 클라우드에 강제 업로드되어
+  //   "복원→클라우드 다운로드 덮어쓰기" 사고 방지
+  try{localStorage.setItem('hj9-pendingSync','1');}catch(e){}
   return count;
 }
 const daysSince=iso=>{if(!iso)return null;const ms=Date.now()-new Date(iso).getTime();return Math.floor(ms/86400000);};
@@ -492,6 +501,97 @@ function MoneyInput({value,onChange,style,placeholder,...rest}){
       onChange={e=>onChange(parseNum(e.target.value))}
       onFocus={e=>e.target.select()}
       style={style} {...rest}/>
+  );
+}
+
+// ── 긴급 복구 화면 ────────────────────────────────────────────
+// ?norestore=1 URL로 접속 시 표시. 클라우드 싱크는 차단된 상태.
+// 현재 기기 localStorage의 hj9-* 키 전부를 JSON으로 다운로드해서 안전한 곳에 보관.
+function RecoveryScreen(){
+  const[scanRes,setScanRes]=useState(null);
+  const[importMsg,setImportMsg]=useState('');
+  React.useEffect(()=>{
+    const found={};let total=0;
+    BACKUP_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null){found[k]=v.length;total++;}});
+    const txRaw=localStorage.getItem('hj9-tx');let txCount=0,lastTxDate='';
+    if(txRaw){try{const tx=JSON.parse(txRaw);if(Array.isArray(tx)){txCount=tx.length;const sorted=[...tx].sort((a,b)=>(b.date||'').localeCompare(a.date||''));lastTxDate=sorted[0]?.date||'';}}catch(e){}}
+    setScanRes({found,total,txCount,lastTxDate});
+  },[]);
+  const onImport=async e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    try{
+      const text=await file.text();
+      const data=JSON.parse(text);
+      if(!data?.keys||typeof data.keys!=='object'){setImportMsg('❌ 백업 파일 형식이 잘못됐어요');return;}
+      let count=0;
+      Object.entries(data.keys).forEach(([k,v])=>{
+        if(!BACKUP_KEYS.includes(k))return;
+        if(typeof v!=='string')return;
+        try{JSON.parse(v);localStorage.setItem(k,v);count++;}catch(e){}
+      });
+      // 복원 후 클라우드로 즉시 업로드되도록 pendingSync 세팅
+      localStorage.setItem('hj9-pendingSync','1');
+      setImportMsg(`✅ ${count}개 키 복원 완료. 일반 모드(주소창에서 ?norestore=1 빼고 새로고침)로 진입하면 자동으로 클라우드에 업로드돼요.`);
+    }catch(err){setImportMsg('❌ 파일 읽기 실패: '+(err?.message||err));}
+  };
+  return(
+    <div style={{minHeight:'100vh',background:'#fef2f2',padding:20,fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif'}}>
+      <div style={{maxWidth:480,margin:'0 auto'}}>
+        <div style={{background:'#dc2626',color:'#fff',borderRadius:16,padding:'18px 16px',marginBottom:14,boxShadow:'0 8px 24px rgba(220,38,38,0.3)'}}>
+          <div style={{fontSize:18,fontWeight:800,marginBottom:6}}>🚨 긴급 복구 모드</div>
+          <div style={{fontSize:12,lineHeight:1.7,opacity:.95}}>
+            클라우드 싱크는 <b>차단</b>돼 있어요 (로컬 절대 안 건드림).<br/>
+            이 화면에서 현재 기기의 데이터를 안전하게 추출/복원할 수 있습니다.
+          </div>
+        </div>
+        {scanRes&&(
+          <div style={{background:'#fff',borderRadius:14,padding:16,marginBottom:14,border:'1px solid #fecaca'}}>
+            <div style={{fontSize:14,fontWeight:700,color:'#374151',marginBottom:10}}>📊 이 기기의 데이터 현황</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
+              <div style={{background:'#f3f4f6',borderRadius:10,padding:'10px 12px'}}>
+                <div style={{fontSize:10,color:'#6b7280'}}>발견된 키</div>
+                <div style={{fontSize:18,fontWeight:800,color:'#1f2937'}}>{scanRes.total}/24개</div>
+              </div>
+              <div style={{background:'#f3f4f6',borderRadius:10,padding:'10px 12px'}}>
+                <div style={{fontSize:10,color:'#6b7280'}}>거래내역</div>
+                <div style={{fontSize:18,fontWeight:800,color:'#1f2937'}}>{scanRes.txCount}건</div>
+              </div>
+            </div>
+            {scanRes.lastTxDate&&<div style={{fontSize:11,color:'#6b7280',marginBottom:4}}>최근 거래일: <b style={{color:'#dc2626'}}>{scanRes.lastTxDate}</b></div>}
+            {scanRes.total===0&&<div style={{fontSize:11,color:'#dc2626',fontWeight:700,marginTop:6,background:'#fef2f2',padding:'8px 10px',borderRadius:8}}>⚠️ 이 기기에는 데이터가 없어요. 다른 기기/브라우저를 확인해 주세요.</div>}
+          </div>
+        )}
+        <button onClick={()=>{
+          const data={version:'1.0.0',exportedAt:new Date().toISOString(),keys:{},recoverMode:true};
+          BACKUP_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data.keys[k]=v;});
+          const ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+          const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+          const url=URL.createObjectURL(blob);
+          const a=document.createElement('a');a.href=url;a.download=`wallet-recover-${ts}.json`;
+          document.body.appendChild(a);a.click();document.body.removeChild(a);
+          setTimeout(()=>URL.revokeObjectURL(url),1000);
+        }} style={{width:'100%',background:'#dc2626',color:'#fff',border:'none',borderRadius:14,padding:'18px',fontSize:16,fontWeight:800,cursor:'pointer',marginBottom:14,boxShadow:'0 6px 16px rgba(220,38,38,0.25)'}}>
+          💾 로컬 데이터 JSON으로 즉시 다운로드
+        </button>
+        <div style={{background:'#fff',borderRadius:14,padding:16,marginBottom:14,border:'1px solid #fecaca'}}>
+          <div style={{fontSize:14,fontWeight:700,color:'#374151',marginBottom:6}}>📥 백업 파일로 복원</div>
+          <div style={{fontSize:11,color:'#6b7280',marginBottom:10,lineHeight:1.6}}>이전에 받은 JSON 파일을 선택하면 이 기기 localStorage에 덮어쓴 뒤, 일반 모드로 들어갈 때 자동으로 클라우드에 업로드됩니다.</div>
+          <input type="file" accept="application/json,.json" onChange={onImport} style={{width:'100%',padding:'10px',border:'1px dashed #fca5a5',borderRadius:10,fontSize:12,background:'#fef2f2'}}/>
+          {importMsg&&<div style={{marginTop:10,padding:'10px 12px',background:'#f0fdf4',borderRadius:8,fontSize:11,color:'#166534',lineHeight:1.6}}>{importMsg}</div>}
+        </div>
+        <div style={{background:'#fff',borderRadius:14,padding:14,border:'1px solid #e5e7eb'}}>
+          <div style={{fontSize:11,color:'#6b7280',lineHeight:1.8}}>
+            <b style={{color:'#374151'}}>다음 단계:</b><br/>
+            1. 위 빨간 버튼으로 현재 기기 데이터 JSON 다운로드<br/>
+            2. 다른 기기/브라우저에서도 같은 URL로 접속해서 각각 백업<br/>
+            3. 받은 JSON 중 거래 건수가 가장 많거나 최근 날짜가 가장 늦은 걸 선택<br/>
+            4. 그 파일을 "백업 파일로 복원"에 업로드<br/>
+            5. 주소창에서 <code style={{background:'#f3f4f6',padding:'1px 5px',borderRadius:4}}>?norestore=1</code> 빼고 새로고침 → 정상 모드 → 자동 클라우드 업로드
+          </div>
+        </div>
+        <a href={location.pathname} style={{display:'block',textAlign:'center',marginTop:14,fontSize:11,color:'#9ca3af',textDecoration:'underline'}}>일반 모드로 나가기</a>
+      </div>
+    </div>
   );
 }
 
@@ -703,6 +803,8 @@ function App(){
           try{sessionStorage.removeItem('fb-synced-uid');}catch(e){}
           return;
         }
+        // 긴급 복구 모드: 클라우드 ↔ 로컬 싱크 전부 차단 (localStorage 절대 보호)
+        if(RECOVER_MODE){console.log('[RECOVER_MODE] 클라우드 싱크 차단됨');return;}
         // 이번 탭 세션에서 이 유저의 클라우드 다운로드를 이미 완료했으면 스킵 (리로드 루프 방지)
         // 리로드 후에도 sessionStorage는 유지되므로 같은 탭 내에선 한 번만 다운로드
         let syncedUid=null;try{syncedUid=sessionStorage.getItem('fb-synced-uid');}catch(e){}
@@ -915,7 +1017,10 @@ function App(){
   const billingDt=nextBillingDate(creditDay);
   const billingLabel=`${billingDt.getMonth()+1}월 ${creditDay}일`;
 
-  if(!rdy||(!PREVIEW_MODE&&!fbAuthReady))return(<div style={{display:'flex',height:'100vh',alignItems:'center',justifyContent:'center',background:'#faf5ff',flexDirection:'column',gap:12}}><div style={{fontSize:60}}>🌸</div><div style={{color:'#7c3aed',fontSize:15,fontWeight:700}}>불러오는 중...</div></div>);
+  if(!rdy||(!PREVIEW_MODE&&!RECOVER_MODE&&!fbAuthReady))return(<div style={{display:'flex',height:'100vh',alignItems:'center',justifyContent:'center',background:'#faf5ff',flexDirection:'column',gap:12}}><div style={{fontSize:60}}>🌸</div><div style={{color:'#7c3aed',fontSize:15,fontWeight:700}}>불러오는 중...</div></div>);
+
+  // ── 긴급 복구 모드 화면 (로그인 없이도 즉시 사용 가능) ──
+  if(RECOVER_MODE)return(<RecoveryScreen/>);
 
   // ── 로그인 게이트: Firebase 인증 해결 완료 + 로그인 안 돼 있을 때만 ──
   if(!PREVIEW_MODE&&!fbUser)return(<LoginGate onLogin={handleLogin} busy={fbBusy}/>);
@@ -1683,6 +1788,29 @@ function SettingsTab({sal,curSal,salMK,salOv,uSal,uSalOv,cats,incCats,uCats,uInc
         </div>
       </div>
     </CatSection>
+
+    {/* ★ 데이터 백업/복원 */}
+    <div style={Cd(th)}>
+      <div style={{fontSize:13,fontWeight:700,color:th.text,marginBottom:6}}>💾 데이터 백업 / 복원</div>
+      <div style={{fontSize:10,color:th.sub,lineHeight:1.7,marginBottom:10}}>
+        클라우드 싱크와 별개로, 안전을 위해 주기적으로 로컬에 JSON 백업 받아두세요.<br/>
+        {(()=>{const lb=lv('hj9-lastBackup');if(!lb)return<span style={{color:'#dc2626',fontWeight:700}}>⚠️ 한 번도 백업 받지 않았어요</span>;const d=daysSince(lb);return<span>마지막 백업: <b style={{color:d>=7?'#dc2626':th.primary}}>{d===0?'오늘':`${d}일 전`}</b></span>;})()}
+      </div>
+      <button onClick={()=>{downloadBackup();setBkTick(t=>t+1);}} style={{width:'100%',background:th.primary,color:'#fff',border:'none',borderRadius:12,padding:'12px',fontSize:13,fontWeight:700,cursor:'pointer',marginBottom:8}}>📥 백업 파일 다운로드 (.json)</button>
+      <label style={{display:'block',width:'100%',background:th.border,color:th.text,border:'none',borderRadius:12,padding:'12px',fontSize:13,fontWeight:700,cursor:'pointer',textAlign:'center',boxSizing:'border-box'}}>
+        📤 백업 파일에서 복원
+        <input type="file" accept="application/json,.json" style={{display:'none'}} onChange={async e=>{
+          const f=e.target.files?.[0];if(!f)return;
+          try{
+            const t=await f.text();const d=JSON.parse(t);
+            if(!confirm('현재 데이터를 백업 파일 내용으로 덮어쓸까요? (취소 가능)'))return;
+            const n=importBackup(d);
+            alert(`${n}개 키 복원 완료. 새로고침할게요.`);
+            location.reload();
+          }catch(err){alert('복원 실패: '+(err?.message||err));}
+        }}/>
+      </label>
+    </div>
 
     {/* ★ 저축 시뮬레이션 - 아코디언으로 변경 */}
     <CatSection title="📊 저축 시뮬레이션" open={openSim} onToggle={()=>setOpenSim(!openSim)}>
