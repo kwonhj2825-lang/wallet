@@ -867,7 +867,7 @@ function App(){
   const getInAmt=(f,mk)=>{const ov=fxInOv[mk]?.[f.id];return(ov!==undefined&&ov!==null)?Number(ov):Number(f.amount||0);};
   const curIn=activeFxIn.reduce((s,f)=>s+getInAmt(f,salMK),0);
   const curSal=curIn; // 호환을 위한 별칭 (기존 컴포넌트 destructure 유지)
-  const fxSum=fxActForMon(fx,salMK).reduce((s,f)=>s+f.amount,0);
+  const fxSum=fxActForMon(fx,salMK).reduce((s,f)=>s+getFxOvAmt(f,salMK,fxOv),0);
   const getIvAmt=(key,mk)=>ivOv[mk]?.[key]??iv[key]?.monthly??0;
   // 목표 자금 카테고리(isWedding=true)의 이름 찾기
   const wedCat=ivCats.find(c=>c.isWedding);
