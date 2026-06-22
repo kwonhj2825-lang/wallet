@@ -12,7 +12,8 @@
   <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/kwonhj2825-lang/wallet/main/%EA%B3%B0.jpg"/>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Babel 8.x에서 transformScriptTags 동작이 회귀해 type=module 스크립트의 import까지 끌어와 SyntaxError를 일으킴 → 7 라인으로 고정 -->
+  <script src="https://unpkg.com/@babel/standalone@7.29.7/babel.min.js"></script>
   <!-- Firebase v10 modular SDK: 로그인+클라우드 동기화 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
